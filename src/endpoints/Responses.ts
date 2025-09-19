@@ -1,13 +1,6 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import {
-  AIResponseRequest,
-  AIResponse,
-  ApiResponse,
-  ListOptions,
-  SearchOptions,
-  PaginatedResponse,
-} from '../types';
+import { ApiResponse } from '../types';
 
 /**
  * Responses - AI yanıtları endpoint'leri

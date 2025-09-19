@@ -1,6 +1,7 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, FileUploadRequest, FileUploadResponse, ValidationException } from '../types';
+import { ApiResponse } from '../types';
+import { ValidationException } from '../exceptions';
 
 /**
  * Upload - Dosya yükleme endpoint'leri
@@ -24,7 +25,7 @@ export class Upload extends BaseEndpoint {
       throw new ValidationException('Dosya yolu boş olamaz');
     }
 
-    return this.getHttpClient().postMultipart('/upload', options || {}, { file: filePath });
+    return this.getHttpClient().postMultipart('/upload', options || {}, { file: { uri: filePath, type: 'application/octet-stream', name: 'file' } });
   }
 
   /**

@@ -1,1015 +1,733 @@
-# User Endpoint - 15 Metod
+# User Endpoint
 
-Kullanıcı yönetimi işlemleri için kullanılan endpoint.
+Kullanıcı yönetimi endpoint'leri - Profil yönetimi, avatar işlemleri, kullanım istatistikleri, AI yanıtları ve hesap yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const user = zapi.user;
+```
 
 ## Metodlar
 
-### 1. getProfile(): Promise<ApiResponse>
-Kullanıcı profilini getirir.
+### 1. getProfile()
 
-**Detaylı Örnek:**
-```typescript
-const profile = await zapi.user.getProfile();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Profil bilgileri getirildi",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "user",
-      "status": "active",
-      "emailVerified": true,
-      "profile": {
-        "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "bio": "Full-stack developer with 5 years experience",
-        "location": "Istanbul, Turkey",
-        "website": "https://johndoe.dev",
-        "social": {
-          "twitter": "@johndoe",
-          "linkedin": "john-doe-dev",
-          "github": "johndoe"
-        }
-      },
-      "preferences": {
-        "language": "tr",
-        "timezone": "Europe/Istanbul",
-        "notifications": {
-          "email": true,
-          "push": true,
-          "sms": false
-        }
-      },
-      "stats": {
-        "totalRequests": 1250,
-        "totalTokens": 45000,
-        "totalCost": 125.50,
-        "lastLogin": "2024-01-15T10:30:00Z",
-        "loginCount": 45
-      },
-      "subscription": {
-        "plan": "premium",
-        "status": "active",
-        "expiresAt": "2024-02-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Kimlik doğrulama gerekli",
-  "error": "AUTHENTICATION_REQUIRED",
-  "details": {
-    "reason": "Valid access token is required"
-  }
-}
-*/
-```
-
-### 2. updateProfile(data: any): Promise<ApiResponse>
-Kullanıcı profilini günceller.
+Kullanıcının profil bilgilerini getirir
 
 **Parametreler:**
-- `data` (any): Güncellenecek veriler
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const updateProfile = await zapi.user.updateProfile({
-  name: 'John Doe Updated',
-  profile: {
-    bio: 'Senior Full-stack developer with 6 years experience in AI and ML',
-    location: 'Istanbul, Turkey',
-    website: 'https://johndoe.dev',
-    social: {
-      twitter: '@johndoe',
-      linkedin: 'john-doe-dev',
-      github: 'johndoe',
-      instagram: '@johndoe'
-    }
+const result = await user.getProfile();
+
+if (result.success) {
+  console.log('Profil bilgileri:', result.data);
+  const { firstName, lastName, email, phone } = result.data;
+} else {
+  console.error('Profil getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_12345",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "+905551234567",
+    "avatar": "https://api.zapi.com/avatars/user_12345.jpg",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   },
-  preferences: {
-    language: 'en',
-    timezone: 'Europe/London',
-    notifications: {
-      email: true,
-      push: false,
-      sms: true
-    }
+  "message": "Profil bilgileri başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Yetkilendirme gerekli"
   }
+}
+```
+
+---
+
+### 2. updateProfile(data: any)
+
+Kullanıcı profil bilgilerini günceller
+
+**Parametreler:**
+- `data: any` - Güncellenecek profil bilgileri
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.updateProfile({
+  firstName: "Jane",
+  lastName: "Smith",
+  phone: "+905559876543"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Profil başarıyla güncellendi",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@example.com",
-      "name": "John Doe Updated",
-      "role": "user",
-      "status": "active",
-      "profile": {
-        "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "bio": "Senior Full-stack developer with 6 years experience in AI and ML",
-        "location": "Istanbul, Turkey",
-        "website": "https://johndoe.dev",
-        "social": {
-          "twitter": "@johndoe",
-          "linkedin": "john-doe-dev",
-          "github": "johndoe",
-          "instagram": "@johndoe"
-        }
-      },
-      "preferences": {
-        "language": "en",
-        "timezone": "Europe/London",
-        "notifications": {
-          "email": true,
-          "push": false,
-          "sms": true
-        }
-      },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Profil güncellendi:', result.data);
+} else {
+  console.error('Profil güncelleme hatası:', result.error);
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Profil güncellenemedi",
-  "error": "PROFILE_UPDATE_FAILED",
-  "details": {
-    "field": "name",
-    "value": "",
-    "reason": "Name cannot be empty"
-  }
-}
-*/
 ```
 
-### 3. changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse>
-Şifre değiştirir.
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_12345",
+    "email": "user@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phone": "+905559876543",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Profil başarıyla güncellendi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Geçersiz telefon numarası formatı"
+  }
+}
+```
+
+---
+
+### 3. uploadAvatar(filePath: string)
+
+Kullanıcı avatar resmi yükler
 
 **Parametreler:**
-- `currentPassword` (string): Mevcut şifre
-- `newPassword` (string): Yeni şifre
+- `filePath: string` - Avatar dosya yolu
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const changePassword = await zapi.user.changePassword(
-  'currentPassword123',
-  'newSecurePassword456'
-);
+const result = await user.uploadAvatar("/path/to/avatar.jpg");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Şifre başarıyla değiştirildi",
-  "data": {
-    "change": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "changedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Avatar yüklendi:', result.data);
+} else {
+  console.error('Avatar yükleme hatası:', result.error);
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Mevcut şifre yanlış",
-  "error": "INVALID_CURRENT_PASSWORD",
-  "details": {
-    "field": "currentPassword",
-    "reason": "Current password is incorrect"
-  }
-}
-*/
 ```
 
-### 4. deleteAccount(): Promise<ApiResponse>
-Hesabı siler.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const deleteAccount = await zapi.user.deleteAccount();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Hesap başarıyla silindi",
   "data": {
-    "deleted": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@example.com",
-      "deletedAt": "2024-01-15T10:40:00Z"
+    "avatarUrl": "https://api.zapi.com/avatars/user_12345.jpg",
+    "fileSize": 245760,
+    "mimeType": "image/jpeg"
+  },
+  "message": "Avatar başarıyla yüklendi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FILE_TOO_LARGE",
+    "message": "Dosya boyutu çok büyük (max 5MB)"
+  }
+}
+```
+
+---
+
+### 4. deleteAvatar()
+
+Kullanıcı avatar resmini siler
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.deleteAvatar();
+
+if (result.success) {
+  console.log('Avatar silindi');
+} else {
+  console.error('Avatar silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Avatar başarıyla silindi"
+}
+```
+
+---
+
+### 5. getUsage()
+
+Kullanıcı kullanım istatistiklerini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.getUsage();
+
+if (result.success) {
+  console.log('Kullanım istatistikleri:', result.data);
+  const { currentPeriod, totalUsage } = result.data;
+  console.log(`Bu ay ${currentPeriod.requestsUsed}/${currentPeriod.requestsLimit} istek kullanıldı`);
+} else {
+  console.error('Kullanım bilgisi getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "currentPeriod": {
+      "startDate": "2024-01-01",
+      "endDate": "2024-01-31",
+      "requestsUsed": 1250,
+      "requestsLimit": 10000,
+      "tokensUsed": 50000,
+      "tokensLimit": 100000
     },
-    "cleanup": {
-      "dataRetentionDays": 30,
-      "finalDeletionDate": "2024-02-14T10:40:00Z",
-      "backupCreated": true,
-      "relatedDataArchived": true
+    "totalUsage": {
+      "requests": 5000,
+      "tokens": 200000
     }
-  }
+  },
+  "message": "Kullanım istatistikleri başarıyla getirildi"
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Hesap silinemedi",
-  "error": "ACCOUNT_DELETE_FAILED",
-  "details": {
-    "reason": "User has active subscription that must be cancelled first"
-  }
-}
-*/
 ```
 
-### 5. getStats(): Promise<ApiResponse>
-Kullanıcı istatistiklerini getirir.
+---
 
-**Detaylı Örnek:**
-```typescript
-const stats = await zapi.user.getStats();
+### 6. getResponses(options: any)
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanıcı istatistikleri getirildi",
-  "data": {
-    "stats": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "overview": {
-        "totalRequests": 1250,
-        "totalTokens": 45000,
-        "totalCost": 125.50,
-        "averageRequestsPerDay": 25.5,
-        "averageCostPerDay": 2.51
-      },
-      "usage": {
-        "thisMonth": {
-          "requests": 320,
-          "tokens": 12000,
-          "cost": 32.50
-        },
-        "lastMonth": {
-          "requests": 280,
-          "tokens": 10500,
-          "cost": 28.75
-        },
-        "growth": {
-          "requests": 14.3,
-          "tokens": 14.3,
-          "cost": 13.0
-        }
-      },
-      "activity": {
-        "lastLogin": "2024-01-15T10:30:00Z",
-        "loginCount": 45,
-        "averageSessionDuration": "12.5 minutes",
-        "mostActiveHour": "14:00",
-        "mostActiveDay": "Monday"
-      },
-      "subscription": {
-        "plan": "premium",
-        "status": "active",
-        "startDate": "2024-01-01T10:30:00Z",
-        "expiresAt": "2024-02-15T10:30:00Z",
-        "renewalCount": 1
-      }
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "İstatistikler alınamadı",
-  "error": "STATS_UNAVAILABLE",
-  "details": {
-    "reason": "User statistics are not available"
-  }
-}
-*/
-```
-
-### 6. getUsage(period: string = 'monthly'): Promise<ApiResponse>
-Kullanım bilgilerini getirir.
+Kullanıcının AI yanıtlarını listeler
 
 **Parametreler:**
-- `period` (string): Kullanım periyodu ('daily', 'weekly', 'monthly', 'yearly')
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const usage = await zapi.user.getUsage('monthly');
+// Tüm yanıtları getir
+const result = await user.getResponses();
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanım bilgileri getirildi",
-  "data": {
-    "usage": {
-      "period": "monthly",
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "summary": {
-        "totalRequests": 320,
-        "totalTokens": 12000,
-        "totalCost": 32.50,
-        "averageRequestsPerDay": 10.3,
-        "averageCostPerDay": 1.05
-      },
-      "breakdown": {
-        "byEndpoint": [
-          {
-            "endpoint": "chat",
-            "requests": 150,
-            "tokens": 8000,
-            "cost": 20.00
-          },
-          {
-            "endpoint": "images",
-            "requests": 100,
-            "tokens": 3000,
-            "cost": 10.00
-          },
-          {
-            "endpoint": "audio",
-            "requests": 70,
-            "tokens": 1000,
-            "cost": 2.50
-          }
-        ],
-        "byDay": [
-          {
-            "date": "2024-01-15",
-            "requests": 15,
-            "tokens": 500,
-            "cost": 1.25
-          },
-          {
-            "date": "2024-01-14",
-            "requests": 12,
-            "tokens": 400,
-            "cost": 1.00
-          }
-        ]
-      },
-      "limits": {
-        "plan": "premium",
-        "monthlyRequests": 10000,
-        "monthlyTokens": 100000,
-        "monthlyCost": 100.00,
-        "remainingRequests": 9680,
-        "remainingTokens": 88000,
-        "remainingCost": 67.50
-      }
-    }
-  }
-}
-*/
+// Filtreleme ile getir
+const result = await user.getResponses({
+  limit: 10,
+  offset: 0,
+  model: "gpt-3.5-turbo"
+});
 
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Kullanım bilgileri alınamadı",
-  "error": "USAGE_UNAVAILABLE",
-  "details": {
-    "reason": "Usage data is not available for the specified period"
-  }
+if (result.success) {
+  console.log('AI yanıtları:', result.data);
+} else {
+  console.error('Yanıt getirme hatası:', result.error);
 }
-*/
 ```
 
-### 7. getBilling(): Promise<ApiResponse>
-Faturalandırma bilgilerini getirir.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const billing = await zapi.user.getBilling();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Faturalandırma bilgileri getirildi",
   "data": {
-    "billing": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "subscription": {
-        "plan": "premium",
-        "status": "active",
-        "amount": 29.99,
-        "currency": "USD",
-        "interval": "month",
-        "nextBillingDate": "2024-02-15T10:30:00Z",
-        "trialEndsAt": null
-      },
-      "paymentMethod": {
-        "type": "credit_card",
-        "last4": "4242",
-        "brand": "visa",
-        "expiryMonth": 12,
-        "expiryYear": 2025
-      },
-      "invoices": [
-        {
-          "id": "inv_64f8a1b2c3d4e5f6g7h8i9j0",
-          "amount": 29.99,
-          "currency": "USD",
-          "status": "paid",
-          "dueDate": "2024-01-15T10:30:00Z",
-          "paidAt": "2024-01-15T10:30:00Z",
-          "downloadUrl": "https://api.zapi.com/invoices/inv_64f8a1b2c3d4e5f6g7h8i9j0.pdf"
-        }
-      ],
-      "usage": {
-        "currentPeriod": {
-          "requests": 320,
-          "tokens": 12000,
-          "cost": 32.50
-        },
-        "overage": {
-          "requests": 0,
-          "tokens": 0,
-          "cost": 0
-        }
-      }
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Faturalandırma bilgileri alınamadı",
-  "error": "BILLING_UNAVAILABLE",
-  "details": {
-    "reason": "Billing information is not available"
-  }
-}
-*/
-```
-
-### 8. getNotifications(): Promise<ApiResponse>
-Bildirimleri getirir.
-
-**Detaylı Örnek:**
-```typescript
-const notifications = await zapi.user.getNotifications();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Bildirimler getirildi",
-  "data": {
-    "notifications": [
+    "responses": [
       {
-        "id": "notif_64f8a1b2c3d4e5f6g7h8i9j0",
-        "type": "usage_alert",
-        "title": "Kullanım Limitinize Yaklaşıyorsunuz",
-        "message": "Bu ay 8,000 istek kullandınız. Limitiniz 10,000.",
-        "read": false,
-        "createdAt": "2024-01-15T10:30:00Z"
-      },
-      {
-        "id": "notif_64f8a1b2c3d4e5f6g7h8i9j1",
-        "type": "billing",
-        "title": "Fatura Ödendi",
-        "message": "Premium plan faturanız başarıyla ödendi.",
-        "read": true,
+        "id": "resp_123",
+        "prompt": "Merhaba, nasılsın?",
+        "response": "Merhaba! Ben iyiyim, teşekkür ederim. Sen nasılsın?",
+        "model": "gpt-3.5-turbo",
+        "tokens": 25,
         "createdAt": "2024-01-15T10:30:00Z"
       }
     ],
-    "unreadCount": 1
-  }
+    "total": 1,
+    "page": 1,
+    "limit": 10
+  },
+  "message": "Yanıtlar başarıyla getirildi"
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Bildirimler alınamadı",
-  "error": "NOTIFICATIONS_UNAVAILABLE",
-  "details": {
-    "reason": "Notifications are not available"
-  }
-}
-*/
 ```
 
-### 9. markNotificationAsRead(notificationId: string): Promise<ApiResponse>
-Bildirimi okundu olarak işaretler.
+---
+
+### 7. getResponse(responseId: string)
+
+Belirli bir AI yanıtını getirir
 
 **Parametreler:**
-- `notificationId` (string): Bildirim ID'si
+- `responseId: string` - Yanıt ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const markAsRead = await zapi.user.markNotificationAsRead('notif_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await user.getResponse("resp_123");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Bildirim okundu olarak işaretlendi",
-  "data": {
-    "notification": {
-      "id": "notif_64f8a1b2c3d4e5f6g7h8i9j0",
-      "read": true,
-      "readAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Yanıt detayı:', result.data);
+} else {
+  console.error('Yanıt getirme hatası:', result.error);
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Bildirim bulunamadı",
-  "error": "NOTIFICATION_NOT_FOUND",
-  "details": {
-    "notificationId": "notif_64f8a1b2c3d4e5f6g7h8i9j0",
-    "reason": "Notification does not exist"
-  }
-}
-*/
 ```
 
-### 10. getConversations(): Promise<ApiResponse>
-Konuşmaları getirir.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const conversations = await zapi.user.getConversations();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Konuşmalar getirildi",
+  "data": {
+    "id": "resp_123",
+    "prompt": "Merhaba, nasılsın?",
+    "response": "Merhaba! Ben iyiyim, teşekkür ederim. Sen nasılsın?",
+    "model": "gpt-3.5-turbo",
+    "tokens": 25,
+    "createdAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Yanıt başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RESPONSE_NOT_FOUND",
+    "message": "Yanıt bulunamadı"
+  }
+}
+```
+
+---
+
+### 8. deleteResponse(responseId: string)
+
+Belirli bir AI yanıtını siler
+
+**Parametreler:**
+- `responseId: string` - Yanıt ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.deleteResponse("resp_123");
+
+if (result.success) {
+  console.log('Yanıt silindi');
+} else {
+  console.error('Yanıt silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Yanıt başarıyla silindi"
+}
+```
+
+---
+
+### 9. getLastResponse()
+
+Kullanıcının son AI yanıtını getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.getLastResponse();
+
+if (result.success) {
+  console.log('Son yanıt:', result.data);
+} else {
+  console.error('Son yanıt getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "resp_123",
+    "prompt": "Son soru",
+    "response": "Son yanıt",
+    "model": "gpt-3.5-turbo",
+    "tokens": 15,
+    "createdAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Son yanıt başarıyla getirildi"
+}
+```
+
+---
+
+### 10. deleteAccount()
+
+Kullanıcı hesabını siler
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.deleteAccount();
+
+if (result.success) {
+  console.log('Hesap silindi');
+} else {
+  console.error('Hesap silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Hesap başarıyla silindi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ACCOUNT_DELETION_FAILED",
+    "message": "Hesap silme işlemi başarısız"
+  }
+}
+```
+
+---
+
+### 11. getMetadata(path: string)
+
+Kullanıcı metadata bilgilerini getirir
+
+**Parametreler:**
+- `path: string` - Metadata yolu (varsayılan: '')
+
+**Örnek Kullanım:**
+
+```typescript
+// Tüm metadata'yı getir
+const result = await user.getMetadata();
+
+// Belirli bir path'i getir
+const result = await user.getMetadata("preferences.theme");
+
+if (result.success) {
+  console.log('Metadata:', result.data);
+} else {
+  console.error('Metadata getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "preferences": {
+      "theme": "dark",
+      "language": "tr"
+    },
+    "settings": {
+      "notifications": true
+    }
+  },
+  "message": "Metadata başarıyla getirildi"
+}
+```
+
+---
+
+### 12. updateMetadata(path: string, value: any)
+
+Kullanıcı metadata bilgilerini günceller
+
+**Parametreler:**
+- `path: string` - Metadata yolu
+- `value: any` - Güncellenecek değer
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.updateMetadata("preferences.theme", "light");
+
+if (result.success) {
+  console.log('Metadata güncellendi:', result.data);
+} else {
+  console.error('Metadata güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "preferences": {
+      "theme": "light",
+      "language": "tr"
+    }
+  },
+  "message": "Metadata başarıyla güncellendi"
+}
+```
+
+---
+
+### 13. patchMetadata(path: string, value: any)
+
+Kullanıcı metadata bilgilerini kısmi olarak günceller
+
+**Parametreler:**
+- `path: string` - Metadata yolu
+- `value: any` - Güncellenecek değer
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.patchMetadata("preferences.language", "en");
+
+if (result.success) {
+  console.log('Metadata güncellendi:', result.data);
+} else {
+  console.error('Metadata güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "preferences": {
+      "theme": "light",
+      "language": "en"
+    }
+  },
+  "message": "Metadata başarıyla güncellendi"
+}
+```
+
+---
+
+### 14. deleteMetadata(path: string)
+
+Kullanıcı metadata bilgilerini siler
+
+**Parametreler:**
+- `path: string` - Metadata yolu
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await user.deleteMetadata("preferences.theme");
+
+if (result.success) {
+  console.log('Metadata silindi');
+} else {
+  console.error('Metadata silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Metadata başarıyla silindi"
+}
+```
+
+---
+
+### 15. getConversations(options: any)
+
+Kullanıcının konuşmalarını listeler
+
+**Parametreler:**
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+// Tüm konuşmaları getir
+const result = await user.getConversations();
+
+// Filtreleme ile getir
+const result = await user.getConversations({
+  limit: 10,
+  offset: 0
+});
+
+if (result.success) {
+  console.log('Konuşmalar:', result.data);
+} else {
+  console.error('Konuşma getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
   "data": {
     "conversations": [
       {
-        "id": "conv_64f8a1b2c3d4e5f6g7h8i9j0",
-        "title": "AI Chat Session",
-        "type": "chat",
-        "messageCount": 15,
-        "lastMessage": {
-          "content": "Bu konuda daha fazla bilgi verebilir misin?",
-          "timestamp": "2024-01-15T10:30:00Z"
-        },
-        "createdAt": "2024-01-15T09:00:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z"
+        "id": "conv_123",
+        "title": "AI Yardımcı Konuşması",
+        "messageCount": 5,
+        "lastMessage": "Teşekkür ederim!",
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T11:00:00Z"
       }
     ],
-    "total": 1
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Konuşmalar alınamadı",
-  "error": "CONVERSATIONS_UNAVAILABLE",
-  "details": {
-    "reason": "Conversations are not available"
-  }
-}
-*/
-```
-
-### 11. getConversation(conversationId: string): Promise<ApiResponse>
-Belirli bir konuşmayı getirir.
-
-**Parametreler:**
-- `conversationId` (string): Konuşma ID'si
-
-**Detaylı Örnek:**
-```typescript
-const conversation = await zapi.user.getConversation('conv_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Konuşma getirildi",
-  "data": {
-    "conversation": {
-      "id": "conv_64f8a1b2c3d4e5f6g7h8i9j0",
-      "title": "AI Chat Session",
-      "type": "chat",
-      "messages": [
-        {
-          "id": "msg_64f8a1b2c3d4e5f6g7h8i9j0",
-          "role": "user",
-          "content": "Merhaba, nasılsın?",
-          "timestamp": "2024-01-15T09:00:00Z"
-        },
-        {
-          "id": "msg_64f8a1b2c3d4e5f6g7h8i9j1",
-          "role": "assistant",
-          "content": "Merhaba! Ben iyiyim, teşekkür ederim. Size nasıl yardımcı olabilirim?",
-          "timestamp": "2024-01-15T09:00:05Z"
-        }
-      ],
-      "messageCount": 15,
-      "createdAt": "2024-01-15T09:00:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Konuşma bulunamadı",
-  "error": "CONVERSATION_NOT_FOUND",
-  "details": {
-    "conversationId": "conv_64f8a1b2c3d4e5f6g7h8i9j0",
-    "reason": "Conversation does not exist"
-  }
-}
-*/
-```
-
-### 12. getMetadata(path: string): Promise<ApiResponse>
-Metadata bilgilerini getirir.
-
-**Parametreler:**
-- `path` (string): Metadata path'i
-
-**Detaylı Örnek:**
-```typescript
-const metadata = await zapi.user.getMetadata('preferences');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata getirildi",
-  "data": {
-    "metadata": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "preferences",
-      "value": {
-        "language": "tr",
-        "timezone": "Europe/Istanbul",
-        "notifications": {
-          "email": true,
-          "push": true,
-          "sms": false
-        },
-        "privacy": {
-          "profileVisibility": "public",
-          "activityVisibility": "friends",
-          "dataSharing": false
-        }
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Metadata bulunamadı",
-  "error": "METADATA_NOT_FOUND",
-  "details": {
-    "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-    "path": "preferences",
-    "reason": "Metadata path does not exist"
-  }
-}
-*/
-```
-
-### 13. updateMetadata(path: string, value: any): Promise<ApiResponse>
-Metadata bilgilerini günceller.
-
-**Parametreler:**
-- `path` (string): Metadata path'i
-- `value` (any): Güncellenecek değer
-
-**Detaylı Örnek:**
-```typescript
-const updateMetadata = await zapi.user.updateMetadata('preferences', {
-  language: 'en',
-  timezone: 'Europe/London',
-  notifications: {
-    email: true,
-    push: false,
-    sms: true
+    "total": 1,
+    "page": 1,
+    "limit": 10
   },
-  privacy: {
-    profileVisibility: 'private',
-    activityVisibility: 'private',
-    dataSharing: false
-  }
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata başarıyla güncellendi",
-  "data": {
-    "metadata": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "preferences",
-      "value": {
-        "language": "en",
-        "timezone": "Europe/London",
-        "notifications": {
-          "email": true,
-          "push": false,
-          "sms": true
-        },
-        "privacy": {
-          "profileVisibility": "private",
-          "activityVisibility": "private",
-          "dataSharing": false
-        }
-      },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+  "message": "Konuşmalar başarıyla getirildi"
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz metadata değeri",
-  "error": "INVALID_METADATA_VALUE",
-  "details": {
-    "field": "language",
-    "value": "invalid_lang",
-    "reason": "Language must be one of: tr, en, es, fr, de, it, pt, ru, ja, ko, zh"
-  }
-}
-*/
 ```
 
-### 14. patchMetadata(path: string, value: any): Promise<ApiResponse>
-Metadata bilgilerini kısmi günceller.
+---
+
+### 16. getConversation(responseId: string)
+
+Belirli bir konuşmayı getirir
 
 **Parametreler:**
-- `path` (string): Metadata path'i
-- `value` (any): Güncellenecek değer
+- `responseId: string` - Yanıt ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const patchMetadata = await zapi.user.patchMetadata('preferences', {
-  language: 'en',
-  notifications: {
-    email: false
-  }
-});
+const result = await user.getConversation("conv_123");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Konuşma detayı:', result.data);
+} else {
+  console.error('Konuşma getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Metadata başarıyla güncellendi",
   "data": {
-    "metadata": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "preferences",
-      "value": {
-        "language": "en",
-        "timezone": "Europe/Istanbul",
-        "notifications": {
-          "email": false,
-          "push": true,
-          "sms": false
-        },
-        "privacy": {
-          "profileVisibility": "public",
-          "activityVisibility": "friends",
-          "dataSharing": false
-        }
+    "id": "conv_123",
+    "title": "AI Yardımcı Konuşması",
+    "messages": [
+      {
+        "id": "msg_1",
+        "role": "user",
+        "content": "Merhaba",
+        "timestamp": "2024-01-15T10:30:00Z"
       },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz metadata değeri",
-  "error": "INVALID_METADATA_VALUE",
-  "details": {
-    "field": "language",
-    "value": "invalid_lang",
-    "reason": "Language must be one of: tr, en, es, fr, de, it, pt, ru, ja, ko, zh"
-  }
-}
-*/
-```
-
-### 15. deleteMetadata(path: string): Promise<ApiResponse>
-Metadata bilgilerini siler.
-
-**Parametreler:**
-- `path` (string): Metadata path'i
-
-**Detaylı Örnek:**
-```typescript
-const deleteMetadata = await zapi.user.deleteMetadata('preferences');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata başarıyla silindi",
-  "data": {
-    "deleted": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "preferences",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Metadata bulunamadı",
-  "error": "METADATA_NOT_FOUND",
-  "details": {
-    "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-    "path": "preferences",
-    "reason": "Metadata path does not exist"
-  }
-}
-*/
-```
-
-## Hata Yönetimi
-
-```typescript
-import { ZAPIException, ValidationException, AuthenticationException } from 'zapi-react-native-sdk';
-
-try {
-  const result = await zapi.user.getProfile();
-} catch (error) {
-  if (error instanceof ValidationException) {
-    console.log('Geçersiz veri:', error.message);
-    console.log('Hata detayları:', error.details);
-  } else if (error instanceof AuthenticationException) {
-    console.log('Kimlik doğrulama hatası:', error.message);
-    console.log('Hata kodu:', error.errorCode);
-  } else if (error instanceof ZAPIException) {
-    console.log('API hatası:', error.message);
-    console.log('HTTP durum kodu:', error.statusCode);
-  }
+      {
+        "id": "msg_2",
+        "role": "assistant",
+        "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+        "timestamp": "2024-01-15T10:30:05Z"
+      }
+    ],
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T11:00:00Z"
+  },
+  "message": "Konuşma başarıyla getirildi"
 }
 ```
 
-## Tam Örnek Kullanım
+---
 
-```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+## Hata Kodları
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
-
-try {
-  // 1. Profil getir
-  const profile = await zapi.user.getProfile();
-  console.log('Profil:', profile.data.user.name);
-  console.log('E-posta:', profile.data.user.email);
-  
-  // 2. Profil güncelle
-  const updateProfile = await zapi.user.updateProfile({
-    name: 'John Doe Updated',
-    profile: {
-      bio: 'Senior Full-stack developer',
-      location: 'Istanbul, Turkey'
-    }
-  });
-  console.log('Profil güncellendi:', updateProfile.data.user.updatedAt);
-  
-  // 3. Şifre değiştir
-  const changePassword = await zapi.user.changePassword(
-    'currentPassword123',
-    'newSecurePassword456'
-  );
-  console.log('Şifre değiştirildi:', changePassword.data.change.changedAt);
-  
-  // 4. İstatistikleri getir
-  const stats = await zapi.user.getStats();
-  console.log('Toplam istek:', stats.data.stats.overview.totalRequests);
-  console.log('Toplam maliyet:', stats.data.stats.overview.totalCost);
-  
-  // 5. Kullanım bilgilerini getir
-  const usage = await zapi.user.getUsage('monthly');
-  console.log('Bu ayki istek:', usage.data.usage.summary.totalRequests);
-  console.log('Kalan istek:', usage.data.usage.limits.remainingRequests);
-  
-  // 6. Faturalandırma bilgilerini getir
-  const billing = await zapi.user.getBilling();
-  console.log('Plan:', billing.data.billing.subscription.plan);
-  console.log('Sonraki faturalandırma:', billing.data.billing.subscription.nextBillingDate);
-  
-  // 7. Bildirimleri getir
-  const notifications = await zapi.user.getNotifications();
-  console.log('Okunmamış bildirim:', notifications.data.unreadCount);
-  
-  // 8. Bildirimi okundu olarak işaretle
-  const markAsRead = await zapi.user.markNotificationAsRead('notif_64f8a1b2c3d4e5f6g7h8i9j0');
-  console.log('Bildirim okundu:', markAsRead.data.notification.readAt);
-  
-  // 9. Konuşmaları getir
-  const conversations = await zapi.user.getConversations();
-  console.log('Toplam konuşma:', conversations.data.total);
-  
-  // 10. Konuşma detayını getir
-  const conversation = await zapi.user.getConversation('conv_64f8a1b2c3d4e5f6g7h8i9j0');
-  console.log('Konuşma başlığı:', conversation.data.conversation.title);
-  console.log('Mesaj sayısı:', conversation.data.conversation.messageCount);
-  
-  // 11. Metadata getir
-  const metadata = await zapi.user.getMetadata('preferences');
-  console.log('Dil:', metadata.data.metadata.value.language);
-  console.log('Zaman dilimi:', metadata.data.metadata.value.timezone);
-  
-  // 12. Metadata güncelle
-  const updateMetadata = await zapi.user.updateMetadata('preferences', {
-    language: 'en',
-    timezone: 'Europe/London',
-    notifications: {
-      email: true,
-      push: false,
-      sms: true
-    }
-  });
-  console.log('Metadata güncellendi:', updateMetadata.data.metadata.updatedAt);
-  
-  // 13. Metadata kısmi güncelle
-  const patchMetadata = await zapi.user.patchMetadata('preferences', {
-    language: 'tr',
-    notifications: {
-      email: false
-    }
-  });
-  console.log('Metadata kısmi güncellendi:', patchMetadata.data.metadata.updatedAt);
-  
-  // 14. Metadata sil
-  const deleteMetadata = await zapi.user.deleteMetadata('preferences');
-  console.log('Metadata silindi:', deleteMetadata.data.deleted.deletedAt);
-  
-  // 15. Hesap sil (dikkatli kullanın!)
-  // const deleteAccount = await zapi.user.deleteAccount();
-  // console.log('Hesap silindi:', deleteAccount.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
-```
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `VALIDATION_ERROR` | Geçersiz parametreler |
+| `FILE_TOO_LARGE` | Dosya boyutu çok büyük |
+| `RESPONSE_NOT_FOUND` | Yanıt bulunamadı |
+| `ACCOUNT_DELETION_FAILED` | Hesap silme işlemi başarısız |
+| `METADATA_NOT_FOUND` | Metadata bulunamadı |
+| `CONVERSATION_NOT_FOUND` | Konuşma bulunamadı |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |

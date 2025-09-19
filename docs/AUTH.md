@@ -1,875 +1,761 @@
-# Auth Endpoint - 18 Metod
+# Auth Endpoint
 
-Kimlik doğrulama işlemleri için kullanılan endpoint.
+Kimlik doğrulama endpoint'leri - Kullanıcı kaydı, giriş, şifre sıfırlama, email/telefon doğrulama, OTP işlemleri ve profil yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const auth = zapi.auth;
+```
 
 ## Metodlar
 
-### 1. register(data: any): Promise<ApiResponse>
-Kullanıcı kaydı yapar.
+### 1. register(data: any)
+
+Kullanıcı kaydı yapar
 
 **Parametreler:**
-- `data` (any): Kayıt verileri
-  - `email` (string): E-posta adresi
-  - `password` (string): Şifre
-  - `name` (string): Ad
-  - `appId` (string): Uygulama ID'si (opsiyonel)
+- `data: any` - Kayıt bilgileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const register = await zapi.auth.register({
-  email: 'user@example.com',
-  password: 'securePassword123',
-  name: 'John Doe',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
+const result = await auth.register({
+  email: "user@example.com",
+  password: "securepassword123",
+  firstName: "John",
+  lastName: "Doe",
+  phone: "+905551234567"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Kayıt başarılı:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Kayıt hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Kullanıcı başarıyla kaydedildi",
   "data": {
     "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
+      "id": "user_12345",
       "email": "user@example.com",
-      "name": "John Doe",
-      "role": "user",
-      "status": "active",
-      "emailVerified": false,
-      "createdAt": "2024-01-15T10:40:00Z"
+      "firstName": "John",
+      "lastName": "Doe",
+      "phone": "+905551234567",
+      "isActive": true,
+      "createdAt": "2024-01-15T10:30:00Z"
     },
-    "tokens": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "E-posta adresi zaten kullanımda",
-  "error": "EMAIL_ALREADY_EXISTS",
-  "details": {
-    "field": "email",
-    "value": "user@example.com",
-    "reason": "Email address is already registered"
-  }
-}
-*/
-```
-
-### 2. login(email?: string, phone?: string, password: string, options?: any): Promise<ApiResponse>
-Kullanıcı girişi yapar.
-
-**Parametreler:**
-- `email` (string, opsiyonel): E-posta adresi
-- `phone` (string, opsiyonel): Telefon numarası
-- `password` (string): Şifre
-- `options` (any, opsiyonel): Ek seçenekler
-  - `appId` (string): Uygulama ID'si
-  - `rememberMe` (boolean): Beni hatırla
-
-**Detaylı Örnek:**
-```typescript
-const login = await zapi.auth.login(
-  'user@example.com',
-  undefined,
-  'securePassword123',
-  {
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0',
-    rememberMe: true
-  }
-);
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "user",
-      "status": "active",
-      "emailVerified": true,
-      "lastLogin": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz kimlik bilgileri",
-  "error": "INVALID_CREDENTIALS",
-  "details": {
-    "field": "password",
-    "reason": "Password is incorrect"
-  }
-}
-*/
-```
-
-### 3. sendOTP(email?: string, phone?: string, appId?: string): Promise<ApiResponse>
-OTP kodu gönderir.
-
-**Parametreler:**
-- `email` (string, opsiyonel): E-posta adresi
-- `phone` (string, opsiyonel): Telefon numarası
-- `appId` (string, opsiyonel): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const sendOTP = await zapi.auth.sendOTP(
-  'user@example.com',
-  undefined,
-  'app_64f8a1b2c3d4e5f6g7h8i9j0'
-);
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "OTP kodu gönderildi",
-  "data": {
-    "otp": {
-      "id": "otp_64f8a1b2c3d4e5f6g7h8i9j0",
-      "type": "email",
-      "recipient": "user@example.com",
-      "expiresAt": "2024-01-15T10:45:00Z",
-      "attempts": 0,
-      "maxAttempts": 3
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "OTP gönderilemedi",
-  "error": "OTP_SEND_FAILED",
-  "details": {
-    "reason": "Email service is temporarily unavailable"
-  }
-}
-*/
-```
-
-### 4. verifyOTP(otpCode: string, email?: string): Promise<ApiResponse>
-OTP kodunu doğrular.
-
-**Parametreler:**
-- `otpCode` (string): OTP kodu
-- `email` (string, opsiyonel): E-posta adresi
-
-**Detaylı Örnek:**
-```typescript
-const verifyOTP = await zapi.auth.verifyOTP('123456', 'user@example.com');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "OTP kodu doğrulandı",
-  "data": {
-    "verification": {
-      "id": "otp_64f8a1b2c3d4e5f6g7h8i9j0",
-      "status": "verified",
-      "verifiedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz OTP kodu",
-  "error": "INVALID_OTP",
-  "details": {
-    "field": "otpCode",
-    "value": "123456",
-    "reason": "OTP code is incorrect or expired"
-  }
-}
-*/
-```
-
-### 5. verifyEmail(token: string): Promise<ApiResponse>
-E-posta doğrulaması yapar.
-
-**Parametreler:**
-- `token` (string): Doğrulama token'ı
-
-**Detaylı Örnek:**
-```typescript
-const verifyEmail = await zapi.auth.verifyEmail('email_verification_token');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "E-posta başarıyla doğrulandı",
-  "data": {
-    "verification": {
-      "email": "user@example.com",
-      "verifiedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz doğrulama token'ı",
-  "error": "INVALID_TOKEN",
-  "details": {
-    "reason": "Token is invalid or expired"
-  }
-}
-*/
-```
-
-### 6. sendVerification(email?: string, phone?: string, type: 'email' | 'phone' = 'email'): Promise<ApiResponse>
-Doğrulama kodu gönderir.
-
-**Parametreler:**
-- `email` (string, opsiyonel): E-posta adresi
-- `phone` (string, opsiyonel): Telefon numarası
-- `type` ('email' | 'phone'): Doğrulama tipi
-
-**Detaylı Örnek:**
-```typescript
-const sendVerification = await zapi.auth.sendVerification(
-  'user@example.com',
-  undefined,
-  'email'
-);
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Doğrulama kodu gönderildi",
-  "data": {
-    "verification": {
-      "id": "verification_64f8a1b2c3d4e5f6g7h8i9j0",
-      "type": "email",
-      "recipient": "user@example.com",
-      "expiresAt": "2024-01-15T10:45:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Doğrulama kodu gönderilemedi",
-  "error": "VERIFICATION_SEND_FAILED",
-  "details": {
-    "reason": "Email service is temporarily unavailable"
-  }
-}
-*/
-```
-
-### 7. verify(email: string, phone: string, code: string, type: 'email' | 'phone'): Promise<ApiResponse>
-Doğrulama kodunu kontrol eder.
-
-**Parametreler:**
-- `email` (string): E-posta adresi
-- `phone` (string): Telefon numarası
-- `code` (string): Doğrulama kodu
-- `type` ('email' | 'phone'): Doğrulama tipi
-
-**Detaylı Örnek:**
-```typescript
-const verify = await zapi.auth.verify(
-  'user@example.com',
-  '+905551234567',
-  '123456',
-  'email'
-);
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Doğrulama başarılı",
-  "data": {
-    "verification": {
-      "id": "verification_64f8a1b2c3d4e5f6g7h8i9j0",
-      "type": "email",
-      "status": "verified",
-      "verifiedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz doğrulama kodu",
-  "error": "INVALID_VERIFICATION_CODE",
-  "details": {
-    "field": "code",
-    "value": "123456",
-    "reason": "Verification code is incorrect or expired"
-  }
-}
-*/
-```
-
-### 8. resetPassword(code: string, newPassword: string): Promise<ApiResponse>
-Şifre sıfırlama yapar.
-
-**Parametreler:**
-- `code` (string): Sıfırlama kodu
-- `newPassword` (string): Yeni şifre
-
-**Detaylı Örnek:**
-```typescript
-const resetPassword = await zapi.auth.resetPassword(
-  'reset_code_123456',
-  'newSecurePassword123'
-);
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Şifre başarıyla sıfırlandı",
-  "data": {
-    "reset": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "resetAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz sıfırlama kodu",
-  "error": "INVALID_RESET_CODE",
-  "details": {
-    "reason": "Reset code is invalid or expired"
-  }
-}
-*/
-```
-
-### 9. forgotPassword(email?: string, phone?: string): Promise<ApiResponse>
-Şifre sıfırlama talebi gönderir.
-
-**Parametreler:**
-- `email` (string, opsiyonel): E-posta adresi
-- `phone` (string, opsiyonel): Telefon numarası
-
-**Detaylı Örnek:**
-```typescript
-const forgotPassword = await zapi.auth.forgotPassword(
-  'user@example.com',
-  undefined
-);
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Şifre sıfırlama bağlantısı gönderildi",
-  "data": {
-    "reset": {
-      "id": "reset_64f8a1b2c3d4e5f6g7h8i9j0",
-      "type": "email",
-      "recipient": "user@example.com",
-      "expiresAt": "2024-01-15T11:40:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Kullanıcı bulunamadı",
-  "error": "USER_NOT_FOUND",
-  "details": {
-    "reason": "No user found with the provided email or phone"
-  }
-}
-*/
-```
-
-### 10. getProfile(): Promise<ApiResponse>
-Kullanıcı profilini getirir.
-
-**Detaylı Örnek:**
-```typescript
-const profile = await zapi.auth.getProfile();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Profil bilgileri getirildi",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "user",
-      "status": "active",
-      "emailVerified": true,
-      "profile": {
-        "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "bio": "Full-stack developer",
-        "location": "Istanbul, Turkey",
-        "website": "https://johndoe.dev"
-      },
-      "preferences": {
-        "language": "tr",
-        "timezone": "Europe/Istanbul",
-        "notifications": {
-          "email": true,
-          "push": true,
-          "sms": false
-        }
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Kimlik doğrulama gerekli",
-  "error": "AUTHENTICATION_REQUIRED",
-  "details": {
-    "reason": "Valid access token is required"
-  }
-}
-*/
-```
-
-### 11. updateProfile(data: any): Promise<ApiResponse>
-Kullanıcı profilini günceller.
-
-**Parametreler:**
-- `data` (any): Güncellenecek veriler
-
-**Detaylı Örnek:**
-```typescript
-const updateProfile = await zapi.auth.updateProfile({
-  name: 'John Doe Updated',
-  profile: {
-    bio: 'Senior Full-stack developer with 5 years experience',
-    location: 'Istanbul, Turkey',
-    website: 'https://johndoe.dev'
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
   },
-  preferences: {
-    language: 'en',
-    timezone: 'Europe/London'
-  }
-});
+  "message": "Kullanıcı başarıyla kaydedildi"
+}
+```
 
-// Başarılı çıktı:
-/*
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "EMAIL_ALREADY_EXISTS",
+    "message": "Bu email adresi zaten kullanılıyor",
+    "details": {
+      "field": "email",
+      "value": "user@example.com"
+    }
+  }
+}
+```
+
+---
+
+### 2. login(email: string | null, phone: string | null, password: string, options: any)
+
+Kullanıcı girişi yapar
+
+**Parametreler:**
+- `email: string | null` - Email adresi (opsiyonel)
+- `phone: string | null` - Telefon numarası (opsiyonel)
+- `password: string` - Şifre
+- `options: any` - Ek seçenekler (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+// Email ile giriş
+const result = await auth.login("user@example.com", null, "securepassword123");
+
+// Telefon ile giriş
+const result = await auth.login(null, "+905551234567", "securepassword123");
+
+if (result.success) {
+  console.log('Giriş başarılı:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Giriş hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Profil başarıyla güncellendi",
   "data": {
     "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
+      "id": "user_12345",
       "email": "user@example.com",
-      "name": "John Doe Updated",
-      "role": "user",
-      "status": "active",
-      "profile": {
-        "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "bio": "Senior Full-stack developer with 5 years experience",
-        "location": "Istanbul, Turkey",
-        "website": "https://johndoe.dev"
-      },
-      "preferences": {
-        "language": "en",
-        "timezone": "Europe/London",
-        "notifications": {
-          "email": true,
-          "push": true,
-          "sms": false
-        }
-      },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+      "firstName": "John",
+      "lastName": "Doe",
+      "isActive": true
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Giriş başarılı"
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Profil güncellenemedi",
-  "error": "PROFILE_UPDATE_FAILED",
-  "details": {
-    "field": "name",
-    "value": "",
-    "reason": "Name cannot be empty"
-  }
-}
-*/
 ```
 
-### 12. changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse>
-Şifre değiştirir.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "Email veya şifre hatalı"
+  }
+}
+```
+
+---
+
+### 3. sendOTP(mail: string | null, phone: string | null, phonePrefix: string, firstName: string, lastName: string, name: string, surname: string, appId: string | null)
+
+OTP kodu gönderir
 
 **Parametreler:**
-- `currentPassword` (string): Mevcut şifre
-- `newPassword` (string): Yeni şifre
+- `mail: string | null` - Email adresi (opsiyonel)
+- `phone: string | null` - Telefon numarası (opsiyonel)
+- `phonePrefix: string` - Telefon ülke kodu (varsayılan: '90')
+- `firstName: string` - Ad (varsayılan: '')
+- `lastName: string` - Soyad (varsayılan: '')
+- `name: string` - İsim (varsayılan: '')
+- `surname: string` - Soyisim (varsayılan: '')
+- `appId: string | null` - Uygulama ID'si (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const changePassword = await zapi.auth.changePassword(
-  'currentPassword123',
-  'newSecurePassword456'
-);
+// Email ile OTP gönder
+const result = await auth.sendOTP("user@example.com", null, "90", "John", "Doe", "", "", null);
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Şifre başarıyla değiştirildi",
-  "data": {
-    "change": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "changedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
+// Telefon ile OTP gönder
+const result = await auth.sendOTP(null, "5551234567", "90", "John", "Doe", "", "", null);
 
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Mevcut şifre yanlış",
-  "error": "INVALID_CURRENT_PASSWORD",
-  "details": {
-    "field": "currentPassword",
-    "reason": "Current password is incorrect"
-  }
+if (result.success) {
+  console.log('OTP gönderildi:', result.data);
+} else {
+  console.error('OTP gönderme hatası:', result.error);
 }
-*/
 ```
 
-### 13. refresh(refreshToken: string): Promise<ApiResponse>
-Token yeniler.
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "otpId": "otp_12345",
+    "expiresIn": 300,
+    "message": "OTP kodu gönderildi"
+  },
+  "message": "OTP başarıyla gönderildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_PHONE_FORMAT",
+    "message": "Telefon numarası formatı geçersiz"
+  }
+}
+```
+
+---
+
+### 4. verifyOTP(phone: string | null, phonePrefix: string | null, email: string | null, otpCode: string)
+
+OTP kodunu doğrular
 
 **Parametreler:**
-- `refreshToken` (string): Refresh token
+- `phone: string | null` - Telefon numarası (opsiyonel)
+- `phonePrefix: string | null` - Telefon ülke kodu (opsiyonel)
+- `email: string | null` - Email adresi (opsiyonel)
+- `otpCode: string` - OTP kodu
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const refresh = await zapi.auth.refresh('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+// Email ile OTP doğrula
+const result = await auth.verifyOTP(null, null, "user@example.com", "123456");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Token başarıyla yenilendi",
-  "data": {
-    "tokens": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
+// Telefon ile OTP doğrula
+const result = await auth.verifyOTP("5551234567", "90", null, "123456");
 
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz refresh token",
-  "error": "INVALID_REFRESH_TOKEN",
-  "details": {
-    "reason": "Refresh token is invalid or expired"
-  }
+if (result.success) {
+  console.log('OTP doğrulandı:', result.data);
+} else {
+  console.error('OTP doğrulama hatası:', result.error);
 }
-*/
 ```
 
-### 14. logout(): Promise<ApiResponse>
-Çıkış yapar.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const logout = await zapi.auth.logout();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Başarıyla çıkış yapıldı",
   "data": {
-    "logout": {
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "loggedOutAt": "2024-01-15T10:40:00Z"
-    }
-  }
+    "verified": true,
+    "message": "OTP kodu doğrulandı"
+  },
+  "message": "OTP başarıyla doğrulandı"
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Çıkış yapılamadı",
-  "error": "LOGOUT_FAILED",
-  "details": {
-    "reason": "User is not authenticated"
-  }
-}
-*/
 ```
 
-### 15. verifyToken(token: string): Promise<ApiResponse>
-Token doğrular.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_OTP",
+    "message": "OTP kodu hatalı veya süresi dolmuş"
+  }
+}
+```
+
+---
+
+### 5. getProfile()
+
+Kullanıcı profil bilgilerini getirir
 
 **Parametreler:**
-- `token` (string): Doğrulanacak token
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const verifyToken = await zapi.auth.verifyToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+const result = await auth.getProfile();
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Profil bilgileri:', result.data);
+} else {
+  console.error('Profil getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Token geçerli",
   "data": {
-    "verification": {
-      "valid": true,
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "expiresAt": "2024-01-16T10:40:00Z",
-      "verifiedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+    "id": "user_12345",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "+905551234567",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Profil bilgileri başarıyla getirildi"
 }
-*/
-
-// Hata çıktısı:
-/*
-{
-  "success": false,
-  "message": "Geçersiz token",
-  "error": "INVALID_TOKEN",
-  "details": {
-    "reason": "Token is invalid or expired"
-  }
-}
-*/
 ```
 
-### 16. health(): Promise<ApiResponse>
-Sistem sağlık durumunu kontrol eder.
+---
 
-**Detaylı Örnek:**
+### 6. updateProfile(data: any)
+
+Kullanıcı profil bilgilerini günceller
+
+**Parametreler:**
+- `data: any` - Güncellenecek profil bilgileri
+
+**Örnek Kullanım:**
+
 ```typescript
-const health = await zapi.auth.health();
+const result = await auth.updateProfile({
+  firstName: "Jane",
+  lastName: "Smith",
+  phone: "+905559876543"
+});
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Profil güncellendi:', result.data);
+} else {
+  console.error('Profil güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Sistem sağlıklı",
   "data": {
-    "health": {
-      "status": "healthy",
-      "timestamp": "2024-01-15T10:40:00Z",
-      "version": "1.0.0",
-      "uptime": "15 days, 8 hours, 32 minutes"
-    }
-  }
+    "id": "user_12345",
+    "email": "user@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phone": "+905559876543",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Profil başarıyla güncellendi"
 }
-*/
+```
 
-// Hata çıktısı:
-/*
+---
+
+### 7. logout()
+
+Kullanıcı çıkışı yapar
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.logout();
+
+if (result.success) {
+  console.log('Çıkış başarılı');
+  zapi.clearBearerToken();
+} else {
+  console.error('Çıkış hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Başarıyla çıkış yapıldı"
+}
+```
+
+---
+
+### 8. refreshToken(refreshToken: string)
+
+Token yeniler
+
+**Parametreler:**
+- `refreshToken: string` - Yenileme token'ı
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.refreshToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
+
+if (result.success) {
+  console.log('Token yenilendi:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Token yenileme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Token başarıyla yenilendi"
+}
+```
+
+---
+
+### 9. changePassword(currentPassword: string, newPassword: string)
+
+Kullanıcı şifresini değiştirir
+
+**Parametreler:**
+- `currentPassword: string` - Mevcut şifre
+- `newPassword: string` - Yeni şifre
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.changePassword("oldpassword123", "newpassword456");
+
+if (result.success) {
+  console.log('Şifre değiştirildi');
+} else {
+  console.error('Şifre değiştirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Şifre başarıyla değiştirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
 {
   "success": false,
-  "message": "Sistem sağlıksız",
-  "error": "HEALTH_CHECK_FAILED",
-  "details": {
-    "reason": "Database connection failed"
-  }
-}
-*/
-```
-
-## Hata Yönetimi
-
-```typescript
-import { ZAPIException, ValidationException, AuthenticationException } from 'zapi-react-native-sdk';
-
-try {
-  const result = await zapi.auth.login('user@example.com', undefined, 'password');
-} catch (error) {
-  if (error instanceof ValidationException) {
-    console.log('Geçersiz veri:', error.message);
-    console.log('Hata detayları:', error.details);
-  } else if (error instanceof AuthenticationException) {
-    console.log('Kimlik doğrulama hatası:', error.message);
-    console.log('Hata kodu:', error.errorCode);
-  } else if (error instanceof ZAPIException) {
-    console.log('API hatası:', error.message);
-    console.log('HTTP durum kodu:', error.statusCode);
+  "error": {
+    "code": "INVALID_CURRENT_PASSWORD",
+    "message": "Mevcut şifre hatalı"
   }
 }
 ```
 
-## Tam Örnek Kullanım
+---
+
+### 10. forgotPassword(email: string | null, phone: string | null)
+
+Şifre sıfırlama kodu gönderir
+
+**Parametreler:**
+- `email: string | null` - Email adresi (opsiyonel)
+- `phone: string | null` - Telefon numarası (opsiyonel)
+
+**Örnek Kullanım:**
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+// Email ile şifre sıfırlama
+const result = await auth.forgotPassword("user@example.com", null);
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+// Telefon ile şifre sıfırlama
+const result = await auth.forgotPassword(null, "+905551234567");
 
-try {
-  // 1. Kullanıcı kaydı
-  const register = await zapi.auth.register({
-    email: 'user@example.com',
-    password: 'securePassword123',
-    name: 'John Doe',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Kullanıcı kaydedildi:', register.data.user.id);
-  
-  // 2. Kullanıcı girişi
-  const login = await zapi.auth.login(
-    'user@example.com',
-    undefined,
-    'securePassword123',
-    { appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0' }
-  );
-  console.log('Giriş başarılı:', login.data.user.name);
-  
-  // 3. OTP gönder
-  const sendOTP = await zapi.auth.sendOTP(
-    'user@example.com',
-    undefined,
-    'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  );
-  console.log('OTP gönderildi:', sendOTP.data.otp.id);
-  
-  // 4. OTP doğrula
-  const verifyOTP = await zapi.auth.verifyOTP('123456', 'user@example.com');
-  console.log('OTP doğrulandı:', verifyOTP.data.verification.status);
-  
-  // 5. E-posta doğrula
-  const verifyEmail = await zapi.auth.verifyEmail('email_verification_token');
-  console.log('E-posta doğrulandı:', verifyEmail.data.verification.email);
-  
-  // 6. Doğrulama kodu gönder
-  const sendVerification = await zapi.auth.sendVerification(
-    'user@example.com',
-    undefined,
-    'email'
-  );
-  console.log('Doğrulama kodu gönderildi:', sendVerification.data.verification.id);
-  
-  // 7. Doğrulama kodunu kontrol et
-  const verify = await zapi.auth.verify(
-    'user@example.com',
-    '+905551234567',
-    '123456',
-    'email'
-  );
-  console.log('Doğrulama başarılı:', verify.data.verification.status);
-  
-  // 8. Şifre sıfırlama talebi
-  const forgotPassword = await zapi.auth.forgotPassword('user@example.com');
-  console.log('Şifre sıfırlama talebi:', forgotPassword.data.reset.id);
-  
-  // 9. Şifre sıfırla
-  const resetPassword = await zapi.auth.resetPassword(
-    'reset_code_123456',
-    'newSecurePassword123'
-  );
-  console.log('Şifre sıfırlandı:', resetPassword.data.reset.resetAt);
-  
-  // 10. Profil getir
-  const profile = await zapi.auth.getProfile();
-  console.log('Profil:', profile.data.user.name);
-  
-  // 11. Profil güncelle
-  const updateProfile = await zapi.auth.updateProfile({
-    name: 'John Doe Updated',
-    profile: {
-      bio: 'Senior Full-stack developer',
-      location: 'Istanbul, Turkey'
+if (result.success) {
+  console.log('Şifre sıfırlama kodu gönderildi');
+} else {
+  console.error('Şifre sıfırlama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "resetToken": "reset_token_12345",
+    "expiresIn": 1800
+  },
+  "message": "Şifre sıfırlama kodu gönderildi"
+}
+```
+
+---
+
+### 11. resetPassword(code: string, newPassword: string)
+
+Şifre sıfırlama kodunu kullanarak yeni şifre belirler
+
+**Parametreler:**
+- `code: string` - Sıfırlama kodu
+- `newPassword: string` - Yeni şifre
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.resetPassword("reset_code_123", "newpassword456");
+
+if (result.success) {
+  console.log('Şifre sıfırlandı');
+} else {
+  console.error('Şifre sıfırlama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Şifre başarıyla sıfırlandı"
+}
+```
+
+---
+
+### 12. verifyEmail(token: string)
+
+Email doğrulama token'ını doğrular
+
+**Parametreler:**
+- `token: string` - Email doğrulama token'ı
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.verifyEmail("email_verification_token_123");
+
+if (result.success) {
+  console.log('Email doğrulandı');
+} else {
+  console.error('Email doğrulama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "verified": true
+  },
+  "message": "Email başarıyla doğrulandı"
+}
+```
+
+---
+
+### 13. sendVerification(email: string | null, phone: string | null, type: string)
+
+Email veya telefon doğrulama kodu gönderir
+
+**Parametreler:**
+- `email: string | null` - Email adresi (opsiyonel)
+- `phone: string | null` - Telefon numarası (opsiyonel)
+- `type: string` - Doğrulama tipi ('email' veya 'phone')
+
+**Örnek Kullanım:**
+
+```typescript
+// Email doğrulama
+const result = await auth.sendVerification("user@example.com", null, "email");
+
+// Telefon doğrulama
+const result = await auth.sendVerification(null, "+905551234567", "phone");
+
+if (result.success) {
+  console.log('Doğrulama kodu gönderildi');
+} else {
+  console.error('Doğrulama kodu gönderme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "verificationId": "verification_12345",
+    "expiresIn": 300
+  },
+  "message": "Doğrulama kodu gönderildi"
+}
+```
+
+---
+
+### 14. verify(email: string | null, phone: string | null, code: string, type: string)
+
+Email veya telefon doğrulama kodunu doğrular
+
+**Parametreler:**
+- `email: string | null` - Email adresi (opsiyonel)
+- `phone: string | null` - Telefon numarası (opsiyonel)
+- `code: string` - Doğrulama kodu
+- `type: string` - Doğrulama tipi ('email' veya 'phone')
+
+**Örnek Kullanım:**
+
+```typescript
+// Email doğrulama
+const result = await auth.verify("user@example.com", null, "123456", "email");
+
+// Telefon doğrulama
+const result = await auth.verify(null, "+905551234567", "123456", "phone");
+
+if (result.success) {
+  console.log('Doğrulama başarılı');
+} else {
+  console.error('Doğrulama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "verified": true
+  },
+  "message": "Doğrulama başarılı"
+}
+```
+
+---
+
+### 15. verifyToken(token: string)
+
+Token'ı doğrular
+
+**Parametreler:**
+- `token: string` - Doğrulanacak token
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.verifyToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
+
+if (result.success) {
+  console.log('Token geçerli:', result.data);
+} else {
+  console.error('Token doğrulama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "valid": true,
+    "user": {
+      "id": "user_12345",
+      "email": "user@example.com"
     }
-  });
-  console.log('Profil güncellendi:', updateProfile.data.user.updatedAt);
-  
-  // 12. Şifre değiştir
-  const changePassword = await zapi.auth.changePassword(
-    'currentPassword123',
-    'newSecurePassword456'
-  );
-  console.log('Şifre değiştirildi:', changePassword.data.change.changedAt);
-  
-  // 13. Token yenile
-  const refresh = await zapi.auth.refresh('refresh_token_here');
-  console.log('Token yenilendi:', refresh.data.tokens.accessToken);
-  
-  // 14. Token doğrula
-  const verifyToken = await zapi.auth.verifyToken('access_token_here');
-  console.log('Token geçerli:', verifyToken.data.verification.valid);
-  
-  // 15. Sistem sağlığı
-  const health = await zapi.auth.health();
-  console.log('Sistem durumu:', health.data.health.status);
-  
-  // 16. Çıkış yap
-  const logout = await zapi.auth.logout();
-  console.log('Çıkış yapıldı:', logout.data.logout.loggedOutAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
+  },
+  "message": "Token geçerli"
 }
 ```
+
+---
+
+### 16. refresh(refreshToken: string)
+
+Token yeniler (alternatif metod)
+
+**Parametreler:**
+- `refreshToken: string` - Yenileme token'ı
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.refresh("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
+
+if (result.success) {
+  console.log('Token yenilendi:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Token yenileme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Token başarıyla yenilendi"
+}
+```
+
+---
+
+### 17. health()
+
+Auth servisinin sağlık durumunu kontrol eder
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await auth.health();
+
+if (result.success) {
+  console.log('Auth servisi çalışıyor:', result.data);
+} else {
+  console.error('Auth servis hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Auth servisi sağlıklı"
+}
+```
+
+---
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `EMAIL_ALREADY_EXISTS` | Email adresi zaten kullanılıyor |
+| `INVALID_CREDENTIALS` | Email veya şifre hatalı |
+| `INVALID_OTP` | OTP kodu hatalı veya süresi dolmuş |
+| `INVALID_PHONE_FORMAT` | Telefon numarası formatı geçersiz |
+| `INVALID_CURRENT_PASSWORD` | Mevcut şifre hatalı |
+| `TOKEN_EXPIRED` | Token süresi dolmuş |
+| `TOKEN_INVALID` | Token geçersiz |
+| `USER_NOT_FOUND` | Kullanıcı bulunamadı |
+| `ACCOUNT_DISABLED` | Hesap devre dışı |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |

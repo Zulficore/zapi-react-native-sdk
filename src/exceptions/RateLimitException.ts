@@ -21,10 +21,10 @@ import { ZAPIException } from './ZAPIException';
  * }
  */
 export class RateLimitException extends ZAPIException {
-  public readonly retryAfter?: number;
-  public readonly limit?: number;
-  public readonly remaining?: number;
-  public readonly resetTime?: number;
+  public readonly retryAfter: number | undefined;
+  public readonly limit: number | undefined;
+  public readonly remaining: number | undefined;
+  public readonly resetTime: number | undefined;
 
   constructor(
     message: string = 'Rate limit aşıldı',
@@ -43,7 +43,7 @@ export class RateLimitException extends ZAPIException {
     this.resetTime = responseData?.resetTime;
   }
 
-  get errorType(): string {
+  override get errorType(): string {
     return 'RateLimitException';
   }
 
@@ -84,12 +84,19 @@ export class RateLimitException extends ZAPIException {
     resetTime?: number;
     retryAfter?: number;
   } {
-    return {
-      limit: this.limit,
-      remaining: this.remaining,
-      resetTime: this.resetTime,
-      retryAfter: this.retryAfter,
-    };
+    const result: {
+      limit?: number;
+      remaining?: number;
+      resetTime?: number;
+      retryAfter?: number;
+    } = {};
+    
+    if (this.limit !== undefined) result.limit = this.limit;
+    if (this.remaining !== undefined) result.remaining = this.remaining;
+    if (this.resetTime !== undefined) result.resetTime = this.resetTime;
+    if (this.retryAfter !== undefined) result.retryAfter = this.retryAfter;
+    
+    return result;
   }
 
   /**

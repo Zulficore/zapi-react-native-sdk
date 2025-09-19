@@ -1,490 +1,575 @@
-# AuthFirebase Endpoint - 9 Metod
+# AuthFirebase Endpoint
 
-Firebase kimlik doğrulama için kullanılan endpoint.
+Firebase kimlik doğrulama endpoint'leri - Google ve Apple ile giriş, token yenileme, profil yönetimi ve SDK durumu.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const authFirebase = zapi.authFirebase;
+```
 
 ## Metodlar
 
-### 1. loginWithGoogle(options: any = {}): Promise<ApiResponse>
-Google ile Firebase girişi yapar.
+### 1. loginWithGoogle(firebaseToken: string, options: any)
+
+Google ile Firebase kimlik doğrulama yapar
 
 **Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `idToken` (string): Google ID token
-  - `accessToken` (string): Google access token
-  - `appId` (string): Uygulama ID'si
+- `firebaseToken: string` - Firebase ID token
+- `options: any` - Ek seçenekler (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const login = await zapi.authFirebase.loginWithGoogle({
-  idToken: 'google_id_token',
-  accessToken: 'google_access_token',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
+// Firebase'den Google token al
+import auth from '@react-native-firebase/auth';
+
+const user = auth().currentUser;
+const firebaseToken = await user.getIdToken();
+
+const result = await authFirebase.loginWithGoogle(firebaseToken, {
+  createAccount: true,
+  mergeAccounts: false
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Google ile giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@gmail.com",
-      "name": "John Doe",
-      "avatar": "https://lh3.googleusercontent.com/avatar.jpg",
-      "provider": "google",
-      "providerId": "google_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Google ile giriş başarılı:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Google giriş hatası:', result.error);
 }
-*/
 ```
 
-### 2. loginWithApple(options: any = {}): Promise<ApiResponse>
-Apple ile Firebase girişi yapar.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `idToken` (string): Apple ID token
-  - `authorizationCode` (string): Apple authorization code
-  - `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const login = await zapi.authFirebase.loginWithApple({
-  idToken: 'apple_id_token',
-  authorizationCode: 'apple_authorization_code',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-});
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Apple ile giriş başarılı",
   "data": {
     "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
+      "id": "user_123",
+      "email": "user@gmail.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "provider": "google",
+      "isActive": true,
+      "createdAt": "2024-01-15T10:30:00Z"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Google ile giriş başarılı"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_FIREBASE_TOKEN",
+    "message": "Geçersiz Firebase token"
+  }
+}
+```
+
+---
+
+### 2. loginWithApple(firebaseToken: string, options: any)
+
+Apple ile Firebase kimlik doğrulama yapar
+
+**Parametreler:**
+- `firebaseToken: string` - Firebase ID token
+- `options: any` - Ek seçenekler (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+// Firebase'den Apple token al
+import auth from '@react-native-firebase/auth';
+
+const user = auth().currentUser;
+const firebaseToken = await user.getIdToken();
+
+const result = await authFirebase.loginWithApple(firebaseToken, {
+  createAccount: true,
+  mergeAccounts: false
+});
+
+if (result.success) {
+  console.log('Apple ile giriş başarılı:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Apple giriş hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user_123",
       "email": "user@privaterelay.appleid.com",
-      "name": "John Doe",
-      "avatar": null,
+      "firstName": "John",
+      "lastName": "Doe",
       "provider": "apple",
-      "providerId": "apple_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
+      "isActive": true,
+      "createdAt": "2024-01-15T10:30:00Z"
     },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Apple ile giriş başarılı"
 }
-*/
 ```
 
-### 3. loginWithFacebook(options: any = {}): Promise<ApiResponse>
-Facebook ile Firebase girişi yapar.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "APPLE_LOGIN_FAILED",
+    "message": "Apple giriş başarısız"
+  }
+}
+```
+
+---
+
+### 3. refreshToken(refreshToken: string)
+
+Firebase token'ını yeniler
 
 **Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `accessToken` (string): Facebook access token
-  - `appId` (string): Uygulama ID'si
+- `refreshToken: string` - Yenileme token'ı
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const login = await zapi.authFirebase.loginWithFacebook({
-  accessToken: 'facebook_access_token',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-});
+const result = await authFirebase.refreshToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Facebook ile giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@facebook.com",
-      "name": "John Doe",
-      "avatar": "https://graph.facebook.com/avatar.jpg",
-      "provider": "facebook",
-      "providerId": "facebook_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Token yenilendi:', result.data);
+  zapi.setBearerToken(result.data.token);
+} else {
+  console.error('Token yenileme hatası:', result.error);
 }
-*/
 ```
 
-### 4. loginWithTwitter(options: any = {}): Promise<ApiResponse>
-Twitter ile Firebase girişi yapar.
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Token başarıyla yenilendi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TOKEN_REFRESH_FAILED",
+    "message": "Token yenileme başarısız"
+  }
+}
+```
+
+---
+
+### 4. updateProfile(data: any)
+
+Firebase kullanıcı profilini günceller
 
 **Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `accessToken` (string): Twitter access token
-  - `accessTokenSecret` (string): Twitter access token secret
-  - `appId` (string): Uygulama ID'si
+- `data: any` - Güncellenecek profil bilgileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const login = await zapi.authFirebase.loginWithTwitter({
-  accessToken: 'twitter_access_token',
-  accessTokenSecret: 'twitter_access_token_secret',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
+const result = await authFirebase.updateProfile({
+  firstName: "Jane",
+  lastName: "Smith",
+  displayName: "Jane Smith",
+  photoURL: "https://example.com/photo.jpg"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Twitter ile giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@twitter.com",
-      "name": "John Doe",
-      "avatar": "https://pbs.twimg.com/profile_images/avatar.jpg",
-      "provider": "twitter",
-      "providerId": "twitter_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Profil güncellendi:', result.data);
+} else {
+  console.error('Profil güncelleme hatası:', result.error);
 }
-*/
 ```
 
-### 5. loginWithGithub(options: any = {}): Promise<ApiResponse>
-GitHub ile Firebase girişi yapar.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `accessToken` (string): GitHub access token
-  - `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const login = await zapi.authFirebase.loginWithGithub({
-  accessToken: 'github_access_token',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-});
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "GitHub ile giriş başarılı",
   "data": {
     "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@github.com",
-      "name": "John Doe",
-      "avatar": "https://avatars.githubusercontent.com/u/avatar.jpg",
-      "provider": "github",
-      "providerId": "github_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 6. loginWithMicrosoft(options: any = {}): Promise<ApiResponse>
-Microsoft ile Firebase girişi yapar.
-
-**Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `accessToken` (string): Microsoft access token
-  - `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const login = await zapi.authFirebase.loginWithMicrosoft({
-  accessToken: 'microsoft_access_token',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Microsoft ile giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@outlook.com",
-      "name": "John Doe",
-      "avatar": "https://graph.microsoft.com/v1.0/me/photo/$value",
-      "provider": "microsoft",
-      "providerId": "microsoft_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 7. loginWithLinkedin(options: any = {}): Promise<ApiResponse>
-LinkedIn ile Firebase girişi yapar.
-
-**Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `accessToken` (string): LinkedIn access token
-  - `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const login = await zapi.authFirebase.loginWithLinkedin({
-  accessToken: 'linkedin_access_token',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "LinkedIn ile giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@linkedin.com",
-      "name": "John Doe",
-      "avatar": "https://media.licdn.com/dms/image/avatar.jpg",
-      "provider": "linkedin",
-      "providerId": "linkedin_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 8. loginWithDiscord(options: any = {}): Promise<ApiResponse>
-Discord ile Firebase girişi yapar.
-
-**Parametreler:**
-- `options` (any): Giriş seçenekleri
-  - `accessToken` (string): Discord access token
-  - `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const login = await zapi.authFirebase.loginWithDiscord({
-  accessToken: 'discord_access_token',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Discord ile giriş başarılı",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "user@discord.com",
-      "name": "John Doe",
-      "avatar": "https://cdn.discordapp.com/avatars/avatar.jpg",
-      "provider": "discord",
-      "providerId": "discord_user_id",
-      "verified": true,
-      "createdAt": "2024-01-15T10:40:00Z"
-    },
-    "tokens": {
-      "accessToken": "zapi_access_token",
-      "refreshToken": "zapi_refresh_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    },
-    "firebase": {
-      "uid": "firebase_user_id",
-      "customToken": "firebase_custom_token",
-      "expiresAt": "2024-01-16T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 9. getUserStatus(): Promise<ApiResponse>
-Kullanıcı durumunu getirir.
-
-**Detaylı Örnek:**
-```typescript
-const status = await zapi.authFirebase.getUserStatus();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanıcı durumu getirildi",
-  "data": {
-    "status": {
-      "authenticated": true,
-      "provider": "google",
-      "uid": "firebase_user_id",
+      "id": "user_123",
       "email": "user@gmail.com",
-      "name": "John Doe",
-      "verified": true,
-      "lastLogin": "2024-01-15T10:40:00Z",
-      "sessionExpiresAt": "2024-01-16T10:40:00Z"
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "displayName": "Jane Smith",
+      "photoURL": "https://example.com/photo.jpg",
+      "updatedAt": "2024-01-15T10:30:00Z"
+    }
+  },
+  "message": "Profil başarıyla güncellendi"
+}
+```
+
+---
+
+### 5. logout()
+
+Firebase kullanıcı çıkışı yapar
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await authFirebase.logout();
+
+if (result.success) {
+  console.log('Çıkış başarılı');
+  zapi.clearBearerToken();
+  
+  // Firebase'den de çıkış yap
+  await auth().signOut();
+} else {
+  console.error('Çıkış hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Başarıyla çıkış yapıldı"
+}
+```
+
+---
+
+### 6. getSDKStatus()
+
+Firebase SDK durumunu kontrol eder
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await authFirebase.getSDKStatus();
+
+if (result.success) {
+  console.log('SDK durumu:', result.data);
+  const { isConnected, version, features } = result.data;
+} else {
+  console.error('SDK durum hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isConnected": true,
+    "version": "19.0.0",
+    "features": {
+      "googleAuth": true,
+      "appleAuth": true,
+      "phoneAuth": true,
+      "emailAuth": true
+    },
+    "lastChecked": "2024-01-15T10:30:00Z"
+  },
+  "message": "SDK durumu başarıyla getirildi"
+}
+```
+
+---
+
+### 7. getDebugInfo()
+
+Firebase debug bilgilerini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await authFirebase.getDebugInfo();
+
+if (result.success) {
+  console.log('Debug bilgileri:', result.data);
+} else {
+  console.error('Debug bilgi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "firebaseConfig": {
+      "projectId": "my-project",
+      "apiKey": "AIza...",
+      "authDomain": "my-project.firebaseapp.com"
+    },
+    "authState": {
+      "isSignedIn": true,
+      "currentUser": {
+        "uid": "firebase_uid_123",
+        "email": "user@gmail.com",
+        "provider": "google"
+      }
+    },
+    "sdkInfo": {
+      "version": "19.0.0",
+      "platform": "react-native"
+    }
+  },
+  "message": "Debug bilgileri başarıyla getirildi"
+}
+```
+
+---
+
+### 8. healthCheck()
+
+Firebase servisinin sağlık durumunu kontrol eder
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await authFirebase.healthCheck();
+
+if (result.success) {
+  console.log('Firebase sağlık durumu:', result.data);
+} else {
+  console.error('Sağlık kontrol hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "services": {
+      "auth": "online",
+      "firestore": "online",
+      "storage": "online"
+    },
+    "responseTime": 150,
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Firebase servisi sağlıklı"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FIREBASE_SERVICE_DOWN",
+    "message": "Firebase servisi çalışmıyor"
+  }
+}
+```
+
+---
+
+### 9. getUserStatus()
+
+Firebase kullanıcı durumunu getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await authFirebase.getUserStatus();
+
+if (result.success) {
+  console.log('Kullanıcı durumu:', result.data);
+  const { isSignedIn, user, provider } = result.data;
+} else {
+  console.error('Kullanıcı durum hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isSignedIn": true,
+    "user": {
+      "uid": "firebase_uid_123",
+      "email": "user@gmail.com",
+      "displayName": "John Doe",
+      "photoURL": "https://example.com/photo.jpg",
+      "emailVerified": true,
+      "provider": "google"
+    },
+    "session": {
+      "createdAt": "2024-01-15T10:30:00Z",
+      "lastActivity": "2024-01-15T10:30:00Z"
+    }
+  },
+  "message": "Kullanıcı durumu başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_NOT_SIGNED_IN",
+    "message": "Kullanıcı giriş yapmamış"
+  }
+}
+```
+
+---
+
+## Firebase Kurulum
+
+React Native Firebase kurulumu:
+
+```bash
+# Firebase paketlerini yükle
+npm install @react-native-firebase/app @react-native-firebase/auth
+
+# iOS için
+cd ios && pod install
+```
+
+## Firebase Konfigürasyonu
+
+`firebase.json` dosyası:
+
+```json
+{
+  "react-native": {
+    "android": {
+      "googleServicesFile": "./android/app/google-services.json"
+    },
+    "ios": {
+      "googleServicesFile": "./ios/GoogleService-Info.plist"
     }
   }
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+## Kimlik Doğrulama Sağlayıcıları
+
+| Sağlayıcı | Açıklama | Gereksinimler |
+|-----------|----------|---------------|
+| `google` | Google ile giriş | Google OAuth yapılandırması |
+| `apple` | Apple ile giriş | Apple Sign In yapılandırması |
+| `phone` | Telefon ile giriş | SMS doğrulama |
+| `email` | Email ile giriş | Email doğrulama |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `INVALID_FIREBASE_TOKEN` | Geçersiz Firebase token |
+| `GOOGLE_LOGIN_FAILED` | Google giriş başarısız |
+| `APPLE_LOGIN_FAILED` | Apple giriş başarısız |
+| `TOKEN_REFRESH_FAILED` | Token yenileme başarısız |
+| `FIREBASE_SERVICE_DOWN` | Firebase servisi çalışmıyor |
+| `USER_NOT_SIGNED_IN` | Kullanıcı giriş yapmamış |
+| `ACCOUNT_MERGE_FAILED` | Hesap birleştirme başarısız |
+| `PROVIDER_NOT_SUPPORTED` | Desteklenmeyen sağlayıcı |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- Firebase token'larını güvenli bir şekilde saklayın
+- Token'ları düzenli olarak yenileyin
+- Kullanıcı çıkışında token'ları temizleyin
+- Firebase güvenlik kurallarını uygun şekilde yapılandırın
+- API anahtarlarını güvenli bir yerde saklayın
+
+## Hesap Birleştirme
+
+Mevcut hesapları Firebase hesaplarıyla birleştirme:
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+const result = await authFirebase.loginWithGoogle(firebaseToken, {
+  createAccount: false,
+  mergeAccounts: true,
+  existingEmail: "user@example.com"
+});
+```
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+## Token Yönetimi
 
-try {
-  // 1. Google ile giriş
-  const googleLogin = await zapi.authFirebase.loginWithGoogle({
-    idToken: 'google_id_token',
-    accessToken: 'google_access_token',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Google giriş:', googleLogin.data.user.name);
-  console.log('Firebase UID:', googleLogin.data.firebase.uid);
-  
-  // 2. Apple ile giriş
-  const appleLogin = await zapi.authFirebase.loginWithApple({
-    idToken: 'apple_id_token',
-    authorizationCode: 'apple_authorization_code',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Apple giriş:', appleLogin.data.user.name);
-  console.log('Firebase Token:', appleLogin.data.firebase.customToken);
-  
-  // 3. Facebook ile giriş
-  const facebookLogin = await zapi.authFirebase.loginWithFacebook({
-    accessToken: 'facebook_access_token',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Facebook giriş:', facebookLogin.data.user.name);
-  
-  // 4. Twitter ile giriş
-  const twitterLogin = await zapi.authFirebase.loginWithTwitter({
-    accessToken: 'twitter_access_token',
-    accessTokenSecret: 'twitter_access_token_secret',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Twitter giriş:', twitterLogin.data.user.name);
-  
-  // 5. GitHub ile giriş
-  const githubLogin = await zapi.authFirebase.loginWithGithub({
-    accessToken: 'github_access_token',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('GitHub giriş:', githubLogin.data.user.name);
-  
-  // 6. Microsoft ile giriş
-  const microsoftLogin = await zapi.authFirebase.loginWithMicrosoft({
-    accessToken: 'microsoft_access_token',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Microsoft giriş:', microsoftLogin.data.user.name);
-  
-  // 7. LinkedIn ile giriş
-  const linkedinLogin = await zapi.authFirebase.loginWithLinkedin({
-    accessToken: 'linkedin_access_token',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('LinkedIn giriş:', linkedinLogin.data.user.name);
-  
-  // 8. Discord ile giriş
-  const discordLogin = await zapi.authFirebase.loginWithDiscord({
-    accessToken: 'discord_access_token',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Discord giriş:', discordLogin.data.user.name);
-  
-  // 9. Kullanıcı durumunu getir
-  const status = await zapi.authFirebase.getUserStatus();
-  console.log('Kimlik doğrulandı:', status.data.status.authenticated);
-  console.log('Sağlayıcı:', status.data.status.provider);
-  console.log('Firebase UID:', status.data.status.uid);
-  console.log('Son giriş:', status.data.status.lastLogin);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
+Firebase token'larını yönetme:
+
+```typescript
+// Token yenileme
+const refreshResult = await authFirebase.refreshToken(refreshToken);
+
+// Token doğrulama
+const userStatus = await authFirebase.getUserStatus();
+
+// Çıkış yapma
+await authFirebase.logout();
 ```

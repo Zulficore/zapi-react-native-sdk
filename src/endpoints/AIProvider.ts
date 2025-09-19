@@ -1,6 +1,7 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, ListOptions, PaginatedResponse, ValidationException } from '../types';
+import { ApiResponse } from '../types';
+import { ValidationException } from '../exceptions';
 
 /**
  * AIProvider - AI sağlayıcı yönetimi endpoint'leri
@@ -154,27 +155,6 @@ export class AIProvider extends BaseEndpoint {
     return this.getHttpClient().post(`/ai-provider/models/${modelId}/test`);
   }
 
-  /**
-   * Varsayılan modelleri getirir
-   */
-  async getDefaultModels(category: string = ''): Promise<ApiResponse> {
-    const endpoint = category ? `/ai-provider/models/default/${category}` : '/ai-provider/models/default';
-    return this.getHttpClient().get(endpoint);
-  }
-
-  /**
-   * Yeni model oluşturur
-   */
-  async createModel(data: any): Promise<ApiResponse> {
-    return this.getHttpClient().post('/ai-provider/models', data);
-  }
-
-  /**
-   * Model testi yapar
-   */
-  async testModel(modelId: string): Promise<ApiResponse> {
-    return this.getHttpClient().post(`/ai-provider/models/${modelId}/test`);
-  }
 
   /**
    * Cache'i temizler

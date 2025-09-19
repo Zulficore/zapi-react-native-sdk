@@ -29,7 +29,6 @@
  */
 
 // Main class
-export { ZAPI } from './ZAPI';
 
 // HTTP Client
 export { HttpClient } from './http/HttpClient';
@@ -47,7 +46,7 @@ export {
 export {
   BaseEndpoint,
   Auth,
-  User,
+  User as UserEndpoint,
   Admin,
   Apps,
   AIProvider,
@@ -77,6 +76,10 @@ export {
   Functions,
   OAuthMetadata,
   Metadata,
+  Video,
+  Users,
+  Logger,
+  AppleTest,
 } from './endpoints';
 
 // Types
@@ -88,7 +91,7 @@ export type {
   LoginResponse,
   RegisterRequest,
   DeviceInfo,
-  User,
+  User as UserType,
   UserData,
   UserSubscription,
   Plan,
@@ -125,4 +128,5 @@ export type {
 } from './types';
 
 // Default export
-export default ZAPI;
+import { ZAPI } from './ZAPI';
+export { ZAPI as default };

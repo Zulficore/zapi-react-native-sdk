@@ -1,714 +1,777 @@
-# AIProvider Endpoint - 14 Metod
+# AIProvider Endpoint
 
-AI sağlayıcı yönetimi için kullanılan endpoint.
+AI sağlayıcı yönetimi endpoint'i - AI sağlayıcıları ve modellerini yönetir.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const aiProvider = zapi.aiProvider;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-AI sağlayıcılarını listeler.
+### 1. list(options: any)
+
+AI sağlayıcılarını listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `search` (string): Arama terimi
-  - `status` (string): Sağlayıcı durumu
-  - `appId` (string): Uygulama ID'si
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const providers = await zapi.aiProvider.list({
-  limit: 10,
-  page: 1,
-  search: 'openai',
+// Tüm AI sağlayıcılarını listele
+const result = await aiProvider.list();
+
+if (result.success) {
+  console.log('AI sağlayıcıları:', result.data);
+  result.data.providers.forEach(provider => {
+    console.log(`${provider.name} - ${provider.type} - ${provider.status}`);
+  });
+} else {
+  console.error('AI sağlayıcı listeleme hatası:', result.error);
+}
+
+// Filtreleme ile listele
+const filteredProviders = await aiProvider.list({
+  type: 'openai',
   status: 'active',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
+  page: 1,
+  limit: 10,
+  search: 'gpt'
 });
 
-// Başarılı çıktı:
-/*
+// Belirli türdeki sağlayıcılar
+const openaiProviders = await aiProvider.list({
+  type: 'openai'
+});
+
+const anthropicProviders = await aiProvider.list({
+  type: 'anthropic'
+});
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "AI sağlayıcıları getirildi",
   "data": {
     "providers": [
       {
-        "id": "provider_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "OpenAI",
-        "type": "text",
+        "id": "provider_123",
+        "name": "OpenAI GPT-4",
+        "type": "openai",
         "status": "active",
         "apiKey": "sk-***",
         "baseUrl": "https://api.openai.com/v1",
-        "models": [
-          {
-            "id": "gpt-4",
-            "name": "GPT-4",
-            "type": "text",
-            "status": "active",
-            "maxTokens": 8192,
-            "costPerToken": 0.00003
-          }
-        ],
-        "stats": {
-          "totalRequests": 1250,
-          "totalTokens": 45000,
-          "totalCost": 125.50,
-          "lastUsed": "2024-01-15T10:30:00Z"
+        "models": ["gpt-4", "gpt-3.5-turbo"],
+        "capabilities": ["text", "image", "audio"],
+        "rateLimit": {
+          "requests": 3500,
+          "tokens": 90000
         },
-        "createdAt": "2024-01-01T10:30:00Z",
+        "createdAt": "2024-01-01T00:00:00Z",
         "updatedAt": "2024-01-15T10:30:00Z"
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 3,
-      "totalItems": 25,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "pages": 1
     }
   }
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni AI sağlayıcı oluşturur.
+---
+
+### 2. create(data: any)
+
+Yeni AI sağlayıcı oluşturur
 
 **Parametreler:**
-- `data` (any): Sağlayıcı verileri
-  - `name` (string): Sağlayıcı adı
-  - `type` (string): Sağlayıcı tipi
-  - `apiKey` (string): API anahtarı
-  - `baseUrl` (string): Base URL
+- `data: any` - Sağlayıcı verisi
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.aiProvider.create({
-  name: 'Anthropic',
-  type: 'text',
-  apiKey: 'sk-ant-***',
-  baseUrl: 'https://api.anthropic.com/v1'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "AI sağlayıcı başarıyla oluşturuldu",
-  "data": {
-    "provider": {
-      "id": "provider_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Anthropic",
-      "type": "text",
-      "status": "active",
-      "apiKey": "sk-ant-***",
-      "baseUrl": "https://api.anthropic.com/v1",
-      "models": [],
-      "stats": {
-        "totalRequests": 0,
-        "totalTokens": 0,
-        "totalCost": 0,
-        "lastUsed": null
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 3. get(providerId: string): Promise<ApiResponse>
-Belirli bir sağlayıcının detaylarını getirir.
-
-**Parametreler:**
-- `providerId` (string): Sağlayıcı ID'si
-
-**Detaylı Örnek:**
-```typescript
-const provider = await zapi.aiProvider.get('provider_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "AI sağlayıcı detayları getirildi",
-  "data": {
-    "provider": {
-      "id": "provider_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "OpenAI",
-      "type": "text",
-      "status": "active",
-      "apiKey": "sk-***",
-      "baseUrl": "https://api.openai.com/v1",
-      "models": [
-        {
-          "id": "gpt-4",
-          "name": "GPT-4",
-          "type": "text",
-          "status": "active",
-          "maxTokens": 8192,
-          "costPerToken": 0.00003,
-          "description": "Most capable GPT-4 model"
-        },
-        {
-          "id": "gpt-3.5-turbo",
-          "name": "GPT-3.5 Turbo",
-          "type": "text",
-          "status": "active",
-          "maxTokens": 4096,
-          "costPerToken": 0.000002,
-          "description": "Fast and efficient model"
-        }
-      ],
-      "stats": {
-        "totalRequests": 1250,
-        "totalTokens": 45000,
-        "totalCost": 125.50,
-        "lastUsed": "2024-01-15T10:30:00Z"
-      },
-      "settings": {
-        "timeout": 30000,
-        "retryAttempts": 3,
-        "retryDelay": 1000
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-```
-
-### 4. update(providerId: string, data: any): Promise<ApiResponse>
-Belirli bir sağlayıcıyı günceller.
-
-**Parametreler:**
-- `providerId` (string): Sağlayıcı ID'si
-- `data` (any): Güncellenecek veriler
-
-**Detaylı Örnek:**
-```typescript
-const update = await zapi.aiProvider.update('provider_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'OpenAI Updated',
-  apiKey: 'sk-new-***',
-  baseUrl: 'https://api.openai.com/v1',
+// OpenAI sağlayıcısı oluştur
+const result = await aiProvider.create({
+  name: "OpenAI GPT-4",
+  type: "openai",
+  apiKey: "sk-your-openai-api-key",
+  baseUrl: "https://api.openai.com/v1",
+  models: ["gpt-4", "gpt-3.5-turbo"],
+  capabilities: ["text", "image", "audio"],
+  rateLimit: {
+    requests: 3500,
+    tokens: 90000
+  },
   settings: {
-    timeout: 45000,
-    retryAttempts: 5,
-    retryDelay: 2000
+    temperature: 0.7,
+    maxTokens: 4096,
+    timeout: 30
   }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "AI sağlayıcı başarıyla güncellendi",
-  "data": {
-    "provider": {
-      "id": "provider_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "OpenAI Updated",
-      "type": "text",
-      "status": "active",
-      "apiKey": "sk-new-***",
-      "baseUrl": "https://api.openai.com/v1",
-      "models": [
-        {
-          "id": "gpt-4",
-          "name": "GPT-4",
-          "type": "text",
-          "status": "active",
-          "maxTokens": 8192,
-          "costPerToken": 0.00003
-        }
-      ],
-      "stats": {
-        "totalRequests": 1250,
-        "totalTokens": 45000,
-        "totalCost": 125.50,
-        "lastUsed": "2024-01-15T10:30:00Z"
-      },
-      "settings": {
-        "timeout": 45000,
-        "retryAttempts": 5,
-        "retryDelay": 2000
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('AI sağlayıcı oluşturuldu:', result.data);
+} else {
+  console.error('AI sağlayıcı oluşturma hatası:', result.error);
 }
-*/
-```
 
-### 5. delete(providerId: string): Promise<ApiResponse>
-Belirli bir sağlayıcıyı siler.
-
-**Parametreler:**
-- `providerId` (string): Sağlayıcı ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteProvider = await zapi.aiProvider.delete('provider_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "AI sağlayıcı başarıyla silindi",
-  "data": {
-    "deleted": {
-      "id": "provider_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "OpenAI Updated",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
+// Anthropic sağlayıcısı oluştur
+const anthropicProvider = await aiProvider.create({
+  name: "Anthropic Claude",
+  type: "anthropic",
+  apiKey: "sk-ant-your-anthropic-key",
+  baseUrl: "https://api.anthropic.com/v1",
+  models: ["claude-3-opus", "claude-3-sonnet"],
+  capabilities: ["text"],
+  rateLimit: {
+    requests: 5000,
+    tokens: 100000
   }
-}
-*/
-```
-
-### 6. testProvider(providerId: string, overrideKey?: string): Promise<ApiResponse>
-Sağlayıcıyı test eder.
-
-**Parametreler:**
-- `providerId` (string): Sağlayıcı ID'si
-- `overrideKey` (string, opsiyonel): Test için kullanılacak API anahtarı
-
-**Detaylı Örnek:**
-```typescript
-const testProvider = await zapi.aiProvider.testProvider('provider_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "AI sağlayıcı test edildi",
-  "data": {
-    "test": {
-      "providerId": "provider_64f8a1b2c3d4e5f6g7h8i9j0",
-      "status": "success",
-      "responseTime": "245ms",
-      "testedAt": "2024-01-15T10:40:00Z",
-      "details": {
-        "connection": "success",
-        "authentication": "success",
-        "models": ["gpt-4", "gpt-3.5-turbo"]
-      }
-    }
-  }
-}
-*/
-```
-
-### 7. getModels(): Promise<ApiResponse>
-Mevcut modelleri getirir.
-
-**Detaylı Örnek:**
-```typescript
-const models = await zapi.aiProvider.getModels();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Modeller getirildi",
-  "data": {
-    "models": [
-      {
-        "id": "gpt-4",
-        "name": "GPT-4",
-        "provider": "OpenAI",
-        "type": "text",
-        "status": "active",
-        "maxTokens": 8192,
-        "costPerToken": 0.00003,
-        "description": "Most capable GPT-4 model"
-      },
-      {
-        "id": "gpt-3.5-turbo",
-        "name": "GPT-3.5 Turbo",
-        "provider": "OpenAI",
-        "type": "text",
-        "status": "active",
-        "maxTokens": 4096,
-        "costPerToken": 0.000002,
-        "description": "Fast and efficient model"
-      }
-    ],
-    "total": 2
-  }
-}
-*/
-```
-
-### 8. getModel(modelId: string): Promise<ApiResponse>
-Belirli bir modelin detaylarını getirir.
-
-**Parametreler:**
-- `modelId` (string): Model ID'si
-
-**Detaylı Örnek:**
-```typescript
-const model = await zapi.aiProvider.getModel('gpt-4');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Model detayları getirildi",
-  "data": {
-    "model": {
-      "id": "gpt-4",
-      "name": "GPT-4",
-      "provider": "OpenAI",
-      "type": "text",
-      "status": "active",
-      "maxTokens": 8192,
-      "costPerToken": 0.00003,
-      "description": "Most capable GPT-4 model",
-      "capabilities": [
-        "text-generation",
-        "text-completion",
-        "conversation"
-      ],
-      "limitations": [
-        "max-tokens: 8192",
-        "rate-limit: 100/min"
-      ],
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-```
-
-### 9. updateModel(modelId: string, data: any): Promise<ApiResponse>
-Belirli bir modeli günceller.
-
-**Parametreler:**
-- `modelId` (string): Model ID'si
-- `data` (any): Güncellenecek veriler
-
-**Detaylı Örnek:**
-```typescript
-const updateModel = await zapi.aiProvider.updateModel('gpt-4', {
-  name: 'GPT-4 Updated',
-  description: 'Updated most capable GPT-4 model',
-  maxTokens: 16384,
-  costPerToken: 0.00006
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Model başarıyla güncellendi",
-  "data": {
-    "model": {
-      "id": "gpt-4",
-      "name": "GPT-4 Updated",
-      "provider": "OpenAI",
-      "type": "text",
-      "status": "active",
-      "maxTokens": 16384,
-      "costPerToken": 0.00006,
-      "description": "Updated most capable GPT-4 model",
-      "capabilities": [
-        "text-generation",
-        "text-completion",
-        "conversation"
-      ],
-      "limitations": [
-        "max-tokens: 16384",
-        "rate-limit: 100/min"
-      ],
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 10. deleteModel(modelId: string): Promise<ApiResponse>
-Belirli bir modeli siler.
-
-**Parametreler:**
-- `modelId` (string): Model ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteModel = await zapi.aiProvider.deleteModel('gpt-4');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Model başarıyla silindi",
-  "data": {
-    "deleted": {
-      "id": "gpt-4",
-      "name": "GPT-4 Updated",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 11. getDefaultModels(category: string = ''): Promise<ApiResponse>
-Varsayılan modelleri getirir.
-
-**Parametreler:**
-- `category` (string): Model kategorisi
-
-**Detaylı Örnek:**
-```typescript
-const defaultModels = await zapi.aiProvider.getDefaultModels('text');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Varsayılan modeller getirildi",
-  "data": {
-    "models": [
-      {
-        "id": "gpt-4",
-        "name": "GPT-4",
-        "provider": "OpenAI",
-        "type": "text",
-        "category": "text",
-        "isDefault": true,
-        "maxTokens": 8192,
-        "costPerToken": 0.00003
-      },
-      {
-        "id": "claude-3",
-        "name": "Claude 3",
-        "provider": "Anthropic",
-        "type": "text",
-        "category": "text",
-        "isDefault": true,
-        "maxTokens": 100000,
-        "costPerToken": 0.000015
-      }
-    ],
-    "category": "text",
-    "total": 2
-  }
-}
-*/
-```
-
-### 12. createModel(data: any): Promise<ApiResponse>
-Yeni model oluşturur.
-
-**Parametreler:**
-- `data` (any): Model verileri
-  - `name` (string): Model adı
-  - `provider` (string): Sağlayıcı
-  - `type` (string): Model tipi
-  - `maxTokens` (number): Maksimum token sayısı
-
-**Detaylı Örnek:**
-```typescript
-const createModel = await zapi.aiProvider.createModel({
-  name: 'Custom GPT-4',
-  provider: 'OpenAI',
-  type: 'text',
-  maxTokens: 8192,
-  costPerToken: 0.00003,
-  description: 'Custom GPT-4 model configuration'
+// Google sağlayıcısı oluştur
+const googleProvider = await aiProvider.create({
+  name: "Google Gemini",
+  type: "google",
+  apiKey: "AIza-your-google-api-key",
+  baseUrl: "https://generativelanguage.googleapis.com/v1",
+  models: ["gemini-pro", "gemini-pro-vision"],
+  capabilities: ["text", "image"]
 });
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Model başarıyla oluşturuldu",
-  "data": {
-    "model": {
-      "id": "custom-gpt-4",
-      "name": "Custom GPT-4",
-      "provider": "OpenAI",
-      "type": "text",
-      "status": "active",
-      "maxTokens": 8192,
-      "costPerToken": 0.00003,
-      "description": "Custom GPT-4 model configuration",
-      "capabilities": [
-        "text-generation",
-        "text-completion",
-        "conversation"
-      ],
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
 ```
 
-### 13. testModel(modelId: string): Promise<ApiResponse>
-Modeli test eder.
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "provider_456",
+    "name": "OpenAI GPT-4",
+    "type": "openai",
+    "status": "active",
+    "apiKey": "sk-***",
+    "baseUrl": "https://api.openai.com/v1",
+    "models": ["gpt-4", "gpt-3.5-turbo"],
+    "capabilities": ["text", "image", "audio"],
+    "rateLimit": {
+      "requests": 3500,
+      "tokens": 90000
+    },
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 4096,
+      "timeout": 30
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 3. get(providerId: string)
+
+AI sağlayıcı detaylarını getirir
 
 **Parametreler:**
-- `modelId` (string): Model ID'si
+- `providerId: string` - Sağlayıcı ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const testModel = await zapi.aiProvider.testModel('gpt-4');
+const result = await aiProvider.get('provider_123');
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Model test edildi",
-  "data": {
-    "test": {
-      "modelId": "gpt-4",
-      "status": "success",
-      "responseTime": "245ms",
-      "testedAt": "2024-01-15T10:40:00Z",
-      "details": {
-        "connection": "success",
-        "authentication": "success",
-        "modelAvailable": true,
-        "maxTokens": 8192
-      }
-    }
-  }
+if (result.success) {
+  console.log('AI sağlayıcı detayları:', result.data);
+  console.log('Sağlayıcı adı:', result.data.name);
+  console.log('Modeller:', result.data.models);
+  console.log('Yetenekler:', result.data.capabilities);
+} else {
+  console.error('AI sağlayıcı getirme hatası:', result.error);
 }
-*/
 ```
 
-### 14. clearCache(): Promise<ApiResponse>
-Cache'i temizler.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const clearCache = await zapi.aiProvider.clearCache();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Cache temizlendi",
   "data": {
-    "cache": {
-      "clearedKeys": 1250,
-      "clearedAt": "2024-01-15T10:40:00Z",
-      "clearedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
+    "id": "provider_123",
+    "name": "OpenAI GPT-4",
+    "type": "openai",
+    "status": "active",
+    "apiKey": "sk-***",
+    "baseUrl": "https://api.openai.com/v1",
+    "models": ["gpt-4", "gpt-3.5-turbo"],
+    "capabilities": ["text", "image", "audio"],
+    "rateLimit": {
+      "requests": 3500,
+      "tokens": 90000
+    },
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 4096,
+      "timeout": 30
+    },
+    "usage": {
+      "requestsToday": 150,
+      "tokensToday": 45000,
+      "requestsThisMonth": 4500,
+      "tokensThisMonth": 1350000
+    },
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+---
+
+### 4. update(providerId: string, data: any)
+
+AI sağlayıcıyı günceller
+
+**Parametreler:**
+- `providerId: string` - Sağlayıcı ID'si
+- `data: any` - Güncellenecek veri
+
+**Örnek Kullanım:**
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
-
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
-
-try {
-  // 1. Sağlayıcıları listele
-  const providers = await zapi.aiProvider.list({
-    limit: 10,
-    page: 1,
-    status: 'active',
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Toplam sağlayıcı:', providers.data.pagination.totalItems);
-  
-  // 2. Yeni sağlayıcı oluştur
-  const create = await zapi.aiProvider.create({
-    name: 'Anthropic',
-    type: 'text',
-    apiKey: 'sk-ant-***',
-    baseUrl: 'https://api.anthropic.com/v1'
-  });
-  const providerId = create.data.provider.id;
-  console.log('Yeni sağlayıcı oluşturuldu:', providerId);
-  
-  // 3. Sağlayıcı detayını getir
-  const provider = await zapi.aiProvider.get(providerId);
-  console.log('Sağlayıcı:', provider.data.provider.name);
-  console.log('Durum:', provider.data.provider.status);
-  
-  // 4. Sağlayıcı güncelle
-  const update = await zapi.aiProvider.update(providerId, {
-    name: 'Anthropic Updated',
-    apiKey: 'sk-ant-new-***',
-    settings: {
-      timeout: 45000,
-      retryAttempts: 5
-    }
-  });
-  console.log('Sağlayıcı güncellendi:', update.data.provider.updatedAt);
-  
-  // 5. Sağlayıcı test et
-  const testProvider = await zapi.aiProvider.testProvider(providerId);
-  console.log('Test durumu:', testProvider.data.test.status);
-  console.log('Yanıt süresi:', testProvider.data.test.responseTime);
-  
-  // 6. Modelleri getir
-  const models = await zapi.aiProvider.getModels();
-  console.log('Toplam model:', models.data.total);
-  
-  // 7. Model detayını getir
-  const model = await zapi.aiProvider.getModel('gpt-4');
-  console.log('Model:', model.data.model.name);
-  console.log('Maksimum token:', model.data.model.maxTokens);
-  
-  // 8. Model güncelle
-  const updateModel = await zapi.aiProvider.updateModel('gpt-4', {
-    name: 'GPT-4 Updated',
-    maxTokens: 16384,
-    costPerToken: 0.00006
-  });
-  console.log('Model güncellendi:', updateModel.data.model.updatedAt);
-  
-  // 9. Varsayılan modelleri getir
-  const defaultModels = await zapi.aiProvider.getDefaultModels('text');
-  console.log('Varsayılan modeller:', defaultModels.data.total);
-  
-  // 10. Yeni model oluştur
-  const createModel = await zapi.aiProvider.createModel({
-    name: 'Custom GPT-4',
-    provider: 'OpenAI',
-    type: 'text',
+const result = await aiProvider.update('provider_123', {
+  name: "OpenAI GPT-4 Updated",
+  rateLimit: {
+    requests: 5000,
+    tokens: 120000
+  },
+  settings: {
+    temperature: 0.8,
     maxTokens: 8192,
-    costPerToken: 0.00003
-  });
-  console.log('Yeni model oluşturuldu:', createModel.data.model.id);
-  
-  // 11. Model test et
-  const testModel = await zapi.aiProvider.testModel('gpt-4');
-  console.log('Model test durumu:', testModel.data.test.status);
-  
-  // 12. Cache temizle
-  const clearCache = await zapi.aiProvider.clearCache();
-  console.log('Temizlenen cache:', clearCache.data.cache.clearedKeys);
-  
-  // 13. Model sil
-  const deleteModel = await zapi.aiProvider.deleteModel('custom-gpt-4');
-  console.log('Model silindi:', deleteModel.data.deleted.deletedAt);
-  
-  // 14. Sağlayıcı sil
-  const deleteProvider = await zapi.aiProvider.delete(providerId);
-  console.log('Sağlayıcı silindi:', deleteProvider.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
+    timeout: 45
+  }
+});
+
+if (result.success) {
+  console.log('AI sağlayıcı güncellendi:', result.data);
+} else {
+  console.error('AI sağlayıcı güncelleme hatası:', result.error);
 }
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "provider_123",
+    "name": "OpenAI GPT-4 Updated",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 5. delete(providerId: string)
+
+AI sağlayıcıyı siler
+
+**Parametreler:**
+- `providerId: string` - Sağlayıcı ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.delete('provider_123');
+
+if (result.success) {
+  console.log('AI sağlayıcı silindi:', result.data);
+} else {
+  console.error('AI sağlayıcı silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "provider_123",
+    "deletedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 6. testProvider(providerId: string, overrideKey: string | null)
+
+AI sağlayıcısını test eder
+
+**Parametreler:**
+- `providerId: string` - Sağlayıcı ID'si
+- `overrideKey: string | null` - Test için geçici API anahtarı (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+// Sağlayıcıyı test et
+const result = await aiProvider.testProvider('provider_123');
+
+if (result.success) {
+  console.log('Sağlayıcı testi başarılı:', result.data);
+  console.log('Yanıt süresi:', result.data.responseTime + 'ms');
+  console.log('Model listesi:', result.data.availableModels);
+} else {
+  console.error('Sağlayıcı test hatası:', result.error);
+}
+
+// Geçici API anahtarı ile test
+const testWithKey = await aiProvider.testProvider('provider_123', 'sk-test-key-123');
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "providerId": "provider_123",
+    "status": "active",
+    "responseTime": 250,
+    "availableModels": ["gpt-4", "gpt-3.5-turbo"],
+    "rateLimit": {
+      "remaining": 3499,
+      "resetAt": "2024-01-15T11:00:00Z"
+    },
+    "testedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 7. getModels(options: any)
+
+AI modellerini listeler
+
+**Parametreler:**
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+// Tüm modelleri listele
+const result = await aiProvider.getModels();
+
+if (result.success) {
+  console.log('AI modelleri:', result.data);
+  result.data.models.forEach(model => {
+    console.log(`${model.name} - ${model.provider} - ${model.type}`);
+  });
+} else {
+  console.error('Model listeleme hatası:', result.error);
+}
+
+// Belirli sağlayıcının modelleri
+const openaiModels = await aiProvider.getModels({
+  provider: 'openai',
+  type: 'text',
+  status: 'active'
+});
+
+// Belirli yeteneklere sahip modeller
+const textModels = await aiProvider.getModels({
+  capabilities: ['text']
+});
+
+const imageModels = await aiProvider.getModels({
+  capabilities: ['image']
+});
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "models": [
+      {
+        "id": "model_123",
+        "name": "gpt-4",
+        "provider": "openai",
+        "type": "text",
+        "status": "active",
+        "capabilities": ["text"],
+        "maxTokens": 8192,
+        "inputCost": 0.03,
+        "outputCost": 0.06,
+        "contextWindow": 128000,
+        "description": "Most capable GPT-4 model",
+        "createdAt": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 1,
+      "pages": 1
+    }
+  }
+}
+```
+
+---
+
+### 8. getModel(modelId: string)
+
+AI model detaylarını getirir
+
+**Parametreler:**
+- `modelId: string` - Model ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.getModel('model_123');
+
+if (result.success) {
+  console.log('Model detayları:', result.data);
+  console.log('Model adı:', result.data.name);
+  console.log('Maksimum token:', result.data.maxTokens);
+  console.log('Maliyet:', result.data.inputCost + ' / ' + result.data.outputCost);
+} else {
+  console.error('Model getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "model_123",
+    "name": "gpt-4",
+    "provider": "openai",
+    "type": "text",
+    "status": "active",
+    "capabilities": ["text"],
+    "maxTokens": 8192,
+    "inputCost": 0.03,
+    "outputCost": 0.06,
+    "contextWindow": 128000,
+    "description": "Most capable GPT-4 model",
+    "parameters": {
+      "temperature": {
+        "min": 0,
+        "max": 2,
+        "default": 0.7
+      },
+      "topP": {
+        "min": 0,
+        "max": 1,
+        "default": 1
+      }
+    },
+    "usage": {
+      "requestsToday": 50,
+      "tokensToday": 15000,
+      "costToday": 4.5
+    },
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 9. updateModel(modelId: string, data: any)
+
+AI modeli günceller
+
+**Parametreler:**
+- `modelId: string` - Model ID'si
+- `data: any` - Güncellenecek veri
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.updateModel('model_123', {
+  status: 'inactive',
+  description: 'Updated model description',
+  inputCost: 0.025,
+  outputCost: 0.05
+});
+
+if (result.success) {
+  console.log('Model güncellendi:', result.data);
+} else {
+  console.error('Model güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "model_123",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 10. deleteModel(modelId: string)
+
+AI modeli siler
+
+**Parametreler:**
+- `modelId: string` - Model ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.deleteModel('model_123');
+
+if (result.success) {
+  console.log('Model silindi:', result.data);
+} else {
+  console.error('Model silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "model_123",
+    "deletedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 11. getDefaultModels()
+
+Varsayılan AI modellerini getirir
+
+**Parametreler:**
+- Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.getDefaultModels();
+
+if (result.success) {
+  console.log('Varsayılan modeller:', result.data);
+  console.log('Varsayılan text modeli:', result.data.defaults.text);
+  console.log('Varsayılan image modeli:', result.data.defaults.image);
+} else {
+  console.error('Varsayılan model getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "defaults": {
+      "text": "gpt-4",
+      "image": "dall-e-3",
+      "audio": "whisper-1",
+      "embedding": "text-embedding-ada-002"
+    },
+    "fallbacks": {
+      "text": "gpt-3.5-turbo",
+      "image": "dall-e-2",
+      "audio": "whisper-1",
+      "embedding": "text-embedding-3-small"
+    },
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 12. testModel(modelId: string)
+
+AI modelini test eder
+
+**Parametreler:**
+- `modelId: string` - Model ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.testModel('model_123');
+
+if (result.success) {
+  console.log('Model testi başarılı:', result.data);
+  console.log('Yanıt süresi:', result.data.responseTime + 'ms');
+  console.log('Test yanıtı:', result.data.testResponse);
+} else {
+  console.error('Model test hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "modelId": "model_123",
+    "status": "active",
+    "responseTime": 1200,
+    "testResponse": "Hello! I'm GPT-4, an AI assistant created by OpenAI.",
+    "tokensUsed": 15,
+    "cost": 0.0009,
+    "testedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 13. clearCache()
+
+AI sağlayıcı cache'ini temizler
+
+**Parametreler:**
+- Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await aiProvider.clearCache();
+
+if (result.success) {
+  console.log('Cache temizlendi:', result.data);
+  console.log('Temizlenen cache türleri:', result.data.clearedTypes);
+} else {
+  console.error('Cache temizleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "clearedTypes": ["models", "providers", "responses"],
+    "clearedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+## AI Sağlayıcı Türleri
+
+| Tür | Açıklama |
+|-----|----------|
+| `openai` | OpenAI GPT modelleri |
+| `anthropic` | Anthropic Claude modelleri |
+| `google` | Google Gemini modelleri |
+| `cohere` | Cohere modelleri |
+| `huggingface` | Hugging Face modelleri |
+| `replicate` | Replicate modelleri |
+
+## Model Yetenekleri
+
+| Yetenek | Açıklama |
+|---------|----------|
+| `text` | Metin üretimi ve analizi |
+| `image` | Görsel üretimi ve analizi |
+| `audio` | Ses işleme |
+| `embedding` | Vektör oluşturma |
+| `function` | Fonksiyon çağırma |
+| `vision` | Görsel anlama |
+
+## Model Türleri
+
+| Tür | Açıklama |
+|-----|----------|
+| `text` | Metin modelleri |
+| `image` | Görsel modelleri |
+| `audio` | Ses modelleri |
+| `embedding` | Embedding modelleri |
+| `multimodal` | Çoklu modal modeller |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `PROVIDER_NOT_FOUND` | Sağlayıcı bulunamadı |
+| `MODEL_NOT_FOUND` | Model bulunamadı |
+| `PROVIDER_TEST_FAILED` | Sağlayıcı testi başarısız |
+| `MODEL_TEST_FAILED` | Model testi başarısız |
+| `INVALID_API_KEY` | Geçersiz API anahtarı |
+| `RATE_LIMIT_EXCEEDED` | Rate limit aşıldı |
+
+## Güvenlik Notları
+
+- API anahtarlarını güvenli saklayın
+- Sağlayıcı erişimlerini kontrol edin
+- Model kullanımını izleyin
+- Maliyetleri takip edin
+
+## AI Sağlayıcı Yönetimi
+
+```typescript
+// Sağlayıcıları listele
+const providers = await aiProvider.list();
+
+// Yeni sağlayıcı oluştur
+const provider = await aiProvider.create({
+  name: "OpenAI GPT-4",
+  type: "openai",
+  apiKey: "sk-***"
+});
+
+// Sağlayıcıyı test et
+const testResult = await aiProvider.testProvider('provider_123');
+
+// Modelleri listele
+const models = await aiProvider.getModels();
+
+// Modeli test et
+const modelTest = await aiProvider.testModel('model_123');
+
+// Cache temizle
+await aiProvider.clearCache();
 ```

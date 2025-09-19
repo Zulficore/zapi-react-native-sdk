@@ -1,468 +1,749 @@
-# Responses Endpoint - 9 Metod
+# Responses Endpoint
 
-Yanıt yönetimi için kullanılan endpoint.
+Yanıt yönetimi endpoint'leri - Yanıt oluşturma, listeleme, arama, silme ve istatistikler.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const responses = zapi.responses;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-Yanıtları listeler.
+### 1. create(data: any)
+
+Yeni yanıt oluşturur
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `status` (string): Yanıt durumu
-  - `type` (string): Yanıt tipi
+- `data: any` - Yanıt verileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const responses = await zapi.responses.list({
-  limit: 10,
-  page: 1,
-  status: 'active',
-  type: 'template'
+const result = await responses.create({
+  title: "Hoş Geldiniz Yanıtı",
+  content: "Merhaba! Size nasıl yardımcı olabilirim?",
+  type: "greeting",
+  category: "welcome",
+  language: "tr",
+  tags: ["welcome", "greeting", "automated"],
+  metadata: {
+    author: "user_123",
+    version: "1.0.0",
+    priority: "high"
+  },
+  conditions: {
+    userType: "new",
+    timeOfDay: "morning"
+  },
+  responses: {
+    success: "Yanıt başarıyla oluşturuldu",
+    error: "Yanıt oluşturulamadı"
+  }
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Yanıt oluşturuldu:', result.data);
+  const { id, title, type, createdAt } = result.data;
+} else {
+  console.error('Yanıt oluşturma hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Yanıtlar getirildi",
+  "data": {
+    "id": "response_123",
+    "title": "Hoş Geldiniz Yanıtı",
+    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+    "type": "greeting",
+    "category": "welcome",
+    "language": "tr",
+    "tags": ["welcome", "greeting", "automated"],
+    "metadata": {
+      "author": "user_123",
+      "version": "1.0.0",
+      "priority": "high",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
+    },
+    "conditions": {
+      "userType": "new",
+      "timeOfDay": "morning"
+    },
+    "responses": {
+      "success": "Yanıt başarıyla oluşturuldu",
+      "error": "Yanıt oluşturulamadı"
+    },
+    "usage": {
+      "count": 0,
+      "lastUsed": null
+    },
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Yanıt başarıyla oluşturuldu"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RESPONSE_CREATION_FAILED",
+    "message": "Yanıt oluşturulamadı"
+  }
+}
+```
+
+---
+
+### 2. list(options: any)
+
+Yanıtları listeler
+
+**Parametreler:**
+- `options: any` - Listeleme seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await responses.list({
+  page: 1,
+  limit: 20,
+  type: "greeting",
+  category: "welcome",
+  language: "tr",
+  status: "active",
+  sortBy: "createdAt",
+  sortOrder: "desc"
+});
+
+if (result.success) {
+  console.log('Yanıtlar:', result.data);
+  result.data.responses.forEach(response => {
+    console.log(`- ${response.title} (${response.type})`);
+  });
+} else {
+  console.error('Yanıt listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
   "data": {
     "responses": [
       {
-        "id": "resp_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "Welcome Response",
-        "type": "template",
+        "id": "response_123",
+        "title": "Hoş Geldiniz Yanıtı",
+        "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+        "type": "greeting",
+        "category": "welcome",
+        "language": "tr",
+        "tags": ["welcome", "greeting", "automated"],
         "status": "active",
-        "content": "Hoş geldiniz! Size nasıl yardımcı olabilirim?",
-        "metadata": {
-          "category": "greeting",
-          "language": "tr",
-          "tags": ["welcome", "greeting", "help"]
-        },
         "usage": {
-          "count": 1250,
-          "lastUsed": "2024-01-15T10:40:00Z"
+          "count": 150,
+          "lastUsed": "2024-01-15T10:25:00Z"
         },
-        "createdAt": "2024-01-01T10:30:00Z",
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z"
+      },
+      {
+        "id": "response_456",
+        "title": "Yardım Yanıtı",
+        "content": "Size nasıl yardımcı olabilirim? Detaylı bilgi için lütfen sorunuzu açıklayın.",
+        "type": "help",
+        "category": "support",
+        "language": "tr",
+        "tags": ["help", "support", "assistance"],
+        "status": "active",
+        "usage": {
+          "count": 89,
+          "lastUsed": "2024-01-15T10:20:00Z"
+        },
+        "createdAt": "2024-01-15T10:30:00Z",
         "updatedAt": "2024-01-15T10:30:00Z"
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalItems": 45,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
+      "page": 1,
+      "limit": 20,
+      "total": 150,
+      "pages": 8
+    },
+    "filters": {
+      "type": "greeting",
+      "category": "welcome",
+      "language": "tr",
+      "status": "active"
+    },
+    "summary": {
+      "totalResponses": 150,
+      "activeResponses": 140,
+      "inactiveResponses": 10,
+      "totalUsage": 2500,
+      "mostUsed": "response_123"
     }
-  }
+  },
+  "message": "Yanıtlar başarıyla listelendi"
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni yanıt oluşturur.
+---
+
+### 3. get(responseId: string)
+
+Belirli bir yanıtı getirir
 
 **Parametreler:**
-- `data` (any): Yanıt verileri
-  - `name` (string): Yanıt adı
-  - `type` (string): Yanıt tipi
-  - `content` (string): Yanıt içeriği
-  - `metadata` (any): Ek veriler
+- `responseId: string` - Yanıt ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.responses.create({
-  name: 'Error Response',
-  type: 'template',
-  content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.',
-  metadata: {
-    category: 'error',
-    language: 'tr',
-    tags: ['error', 'apology', 'retry']
-  }
-});
+const result = await responses.get("response_123");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yanıt başarıyla oluşturuldu",
-  "data": {
-    "response": {
-      "id": "resp_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Error Response",
-      "type": "template",
-      "status": "active",
-      "content": "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.",
-      "metadata": {
-        "category": "error",
-        "language": "tr",
-        "tags": ["error", "apology", "retry"]
-      },
-      "usage": {
-        "count": 0,
-        "lastUsed": null
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Yanıt detayları:', result.data);
+  const { title, content, type, usage, metadata } = result.data;
+} else {
+  console.error('Yanıt getirme hatası:', result.error);
 }
-*/
 ```
 
-### 3. get(responseId: string): Promise<ApiResponse>
-Belirli bir yanıtın detaylarını getirir.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `responseId` (string): Yanıt ID'si
-
-**Detaylı Örnek:**
-```typescript
-const response = await zapi.responses.get('resp_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Yanıt detayları getirildi",
   "data": {
-    "response": {
-      "id": "resp_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Welcome Response",
-      "type": "template",
-      "status": "active",
-      "content": "Hoş geldiniz! Size nasıl yardımcı olabilirim?",
-      "metadata": {
-        "category": "greeting",
-        "language": "tr",
-        "tags": ["welcome", "greeting", "help"]
-      },
-      "usage": {
-        "count": 1250,
-        "lastUsed": "2024-01-15T10:40:00Z"
-      },
-      "variations": [
-        {
-          "id": "var_64f8a1b2c3d4e5f6g7h8i9j0",
-          "content": "Merhaba! Size nasıl yardımcı olabilirim?",
-          "language": "tr"
-        }
-      ],
-      "createdAt": "2024-01-01T10:30:00Z",
+    "id": "response_123",
+    "title": "Hoş Geldiniz Yanıtı",
+    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+    "type": "greeting",
+    "category": "welcome",
+    "language": "tr",
+    "tags": ["welcome", "greeting", "automated"],
+    "metadata": {
+      "author": "user_123",
+      "version": "1.0.0",
+      "priority": "high",
+      "description": "Yeni kullanıcılar için hoş geldin mesajı",
+      "createdAt": "2024-01-15T10:30:00Z",
       "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
+    },
+    "conditions": {
+      "userType": "new",
+      "timeOfDay": "morning",
+      "userSegment": "premium"
+    },
+    "responses": {
+      "success": "Yanıt başarıyla oluşturuldu",
+      "error": "Yanıt oluşturulamadı",
+      "fallback": "Varsayılan yanıt"
+    },
+    "usage": {
+      "count": 150,
+      "lastUsed": "2024-01-15T10:25:00Z",
+      "frequency": "daily",
+      "averagePerDay": 25,
+      "peakUsage": "2024-01-14T14:30:00Z"
+    },
+    "performance": {
+      "averageResponseTime": 120,
+      "successRate": 98.5,
+      "userSatisfaction": 4.2
+    },
+    "relatedResponses": [
+      {
+        "id": "response_456",
+        "title": "Yardım Yanıtı",
+        "type": "help",
+        "similarity": 0.85
+      }
+    ],
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Yanıt başarıyla getirildi"
 }
-*/
 ```
 
-### 4. update(responseId: string, data: any): Promise<ApiResponse>
-Belirli bir yanıtı günceller.
+---
+
+### 4. delete(responseId: string)
+
+Yanıtı siler
 
 **Parametreler:**
-- `responseId` (string): Yanıt ID'si
-- `data` (any): Güncellenecek veriler
+- `responseId: string` - Yanıt ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const update = await zapi.responses.update('resp_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'Updated Welcome Response',
-  content: 'Hoş geldiniz! Size nasıl yardımcı olabilirim? Lütfen sorularınızı sorun.',
-  metadata: {
-    category: 'greeting',
-    language: 'tr',
-    tags: ['welcome', 'greeting', 'help', 'questions']
+const result = await responses.delete("response_123");
+
+if (result.success) {
+  console.log('Yanıt silindi:', result.data);
+  const { id, deletedAt, finalStats } = result.data;
+} else {
+  console.error('Yanıt silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "response_123",
+    "title": "Hoş Geldiniz Yanıtı",
+    "type": "greeting",
+    "category": "welcome",
+    "deletedAt": "2024-01-15T10:30:00Z",
+    "deletedBy": "user_123",
+    "finalStats": {
+      "totalUsage": 150,
+      "lastUsed": "2024-01-15T10:25:00Z",
+      "averageRating": 4.2,
+      "successRate": 98.5
+    },
+    "backupCreated": true,
+    "backupLocation": "backups/responses/response_123_backup.json"
+  },
+  "message": "Yanıt başarıyla silindi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RESPONSE_DELETION_FAILED",
+    "message": "Yanıt silinemedi - Aktif kullanımda"
   }
+}
+```
+
+---
+
+### 5. getStats(options: any)
+
+Yanıt istatistiklerini getirir
+
+**Parametreler:**
+- `options: any` - İstatistik seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await responses.getStats({
+  period: "30d",
+  groupBy: "type",
+  includeUsage: true,
+  includePerformance: true
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yanıt başarıyla güncellendi",
-  "data": {
-    "response": {
-      "id": "resp_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Welcome Response",
-      "type": "template",
-      "status": "active",
-      "content": "Hoş geldiniz! Size nasıl yardımcı olabilirim? Lütfen sorularınızı sorun.",
-      "metadata": {
-        "category": "greeting",
-        "language": "tr",
-        "tags": ["welcome", "greeting", "help", "questions"]
-      },
-      "usage": {
-        "count": 1250,
-        "lastUsed": "2024-01-15T10:40:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:45:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Yanıt istatistikleri:', result.data);
+  const { totalResponses, usage, performance, trends } = result.data;
+} else {
+  console.error('İstatistik hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(responseId: string): Promise<ApiResponse>
-Belirli bir yanıtı siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `responseId` (string): Yanıt ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteResponse = await zapi.responses.delete('resp_64f8a1b2c3d4e5f6g7h8i9j1');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Yanıt başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "resp_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Error Response",
-      "deletedAt": "2024-01-15T10:45:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 6. activate(responseId: string): Promise<ApiResponse>
-Belirli bir yanıtı aktif eder.
-
-**Parametreler:**
-- `responseId` (string): Yanıt ID'si
-
-**Detaylı Örnek:**
-```typescript
-const activate = await zapi.responses.activate('resp_64f8a1b2c3d4e5f6g7h8i9j1');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yanıt başarıyla aktif edildi",
-  "data": {
-    "response": {
-      "id": "resp_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Error Response",
-      "status": "active",
-      "activatedAt": "2024-01-15T10:45:00Z"
-    }
-  }
-}
-*/
-```
-
-### 7. deactivate(responseId: string): Promise<ApiResponse>
-Belirli bir yanıtı pasif eder.
-
-**Parametreler:**
-- `responseId` (string): Yanıt ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deactivate = await zapi.responses.deactivate('resp_64f8a1b2c3d4e5f6g7h8i9j1');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yanıt başarıyla pasif edildi",
-  "data": {
-    "response": {
-      "id": "resp_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Error Response",
-      "status": "inactive",
-      "deactivatedAt": "2024-01-15T10:45:00Z"
-    }
-  }
-}
-*/
-```
-
-### 8. getStats(options: any = {}): Promise<ApiResponse>
-Yanıt istatistiklerini getirir.
-
-**Parametreler:**
-- `options` (any): İstatistik seçenekleri
-  - `period` (string): İstatistik periyodu
-  - `dateFrom` (string): Başlangıç tarihi
-  - `dateTo` (string): Bitiş tarihi
-
-**Detaylı Örnek:**
-```typescript
-const stats = await zapi.responses.getStats({
-  period: 'monthly',
-  dateFrom: '2024-01-01',
-  dateTo: '2024-01-31'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yanıt istatistikleri getirildi",
-  "data": {
-    "stats": {
-      "period": "monthly",
-      "dateRange": {
-        "from": "2024-01-01",
-        "to": "2024-01-31"
+    "period": "30d",
+    "totalResponses": 150,
+    "usage": {
+      "totalCalls": 2500,
+      "averagePerDay": 83,
+      "peakDay": "2024-01-14",
+      "peakHour": "14:00",
+      "byType": {
+        "greeting": 800,
+        "help": 600,
+        "error": 400,
+        "confirmation": 300,
+        "custom": 400
       },
-      "overview": {
-        "totalResponses": 45,
-        "activeResponses": 40,
-        "inactiveResponses": 5,
-        "totalUsage": 12500,
-        "averageUsage": 277.8
+      "byCategory": {
+        "welcome": 800,
+        "support": 600,
+        "error": 400,
+        "success": 300,
+        "info": 400
       },
-      "breakdown": {
-        "byType": [
-          {
-            "type": "template",
-            "count": 30,
-            "usage": 8000
-          },
-          {
-            "type": "dynamic",
-            "count": 15,
-            "usage": 4500
-          }
-        ],
-        "byCategory": [
-          {
-            "category": "greeting",
-            "count": 10,
-            "usage": 3000
-          },
-          {
-            "category": "error",
-            "count": 8,
-            "usage": 2500
-          }
-        ]
-      },
-      "topResponses": [
+      "byLanguage": {
+        "tr": 2000,
+        "en": 400,
+        "de": 100
+      }
+    },
+    "performance": {
+      "averageResponseTime": 120,
+      "successRate": 98.5,
+      "errorRate": 1.5,
+      "userSatisfaction": 4.2,
+      "topPerformers": [
         {
-          "id": "resp_64f8a1b2c3d4e5f6g7h8i9j0",
-          "name": "Welcome Response",
-          "usage": 1250
+          "id": "response_123",
+          "title": "Hoş Geldiniz Yanıtı",
+          "usage": 150,
+          "satisfaction": 4.5,
+          "successRate": 99.0
         }
       ]
-    }
-  }
+    },
+    "trends": {
+      "usageGrowth": 15.5,
+      "responseTimeImprovement": -5.2,
+      "satisfactionImprovement": 0.3,
+      "errorRateReduction": -20.0
+    },
+    "insights": [
+      {
+        "type": "usage",
+        "message": "Greeting yanıtları en çok kullanılan tür",
+        "impact": "high"
+      },
+      {
+        "type": "performance",
+        "message": "Yanıt süreleri %5.2 iyileşti",
+        "impact": "medium"
+      }
+    ],
+    "lastUpdated": "2024-01-15T10:30:00Z"
+  },
+  "message": "Yanıt istatistikleri başarıyla getirildi"
 }
-*/
 ```
 
-### 9. getMetadata(responseId: string, path: string): Promise<ApiResponse>
-Yanıtın metadata bilgilerini getirir.
+---
+
+### 6. search(options: any)
+
+Yanıtları arar
 
 **Parametreler:**
-- `responseId` (string): Yanıt ID'si
-- `path` (string): Metadata path'i
+- `options: any` - Arama seçenekleri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const metadata = await zapi.responses.getMetadata('resp_64f8a1b2c3d4e5f6g7h8i9j0', 'custom');
+const result = await responses.search({
+  query: "hoş geldin",
+  type: "greeting",
+  language: "tr",
+  category: "welcome",
+  tags: ["welcome", "greeting"],
+  limit: 10,
+  sortBy: "relevance",
+  sortOrder: "desc"
+});
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata getirildi",
-  "data": {
-    "metadata": {
-      "responseId": "resp_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "custom",
-      "value": {
-        "priority": "high",
-        "context": "first_interaction",
-        "fallback": true
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Arama sonuçları:', result.data);
+  result.data.results.forEach(result => {
+    console.log(`- ${result.title} (Relevance: ${result.relevance})`);
+  });
+} else {
+  console.error('Arama hatası:', result.error);
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "query": "hoş geldin",
+    "results": [
+      {
+        "id": "response_123",
+        "title": "Hoş Geldiniz Yanıtı",
+        "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+        "type": "greeting",
+        "category": "welcome",
+        "language": "tr",
+        "tags": ["welcome", "greeting", "automated"],
+        "relevance": 0.95,
+        "matches": [
+          {
+            "field": "title",
+            "text": "Hoş <mark>Geldiniz</mark> Yanıtı",
+            "score": 0.9
+          },
+          {
+            "field": "content",
+            "text": "Merhaba! Size nasıl yardımcı olabilirim?",
+            "score": 0.8
+          }
+        ],
+        "usage": {
+          "count": 150,
+          "lastUsed": "2024-01-15T10:25:00Z"
+        },
+        "createdAt": "2024-01-15T10:30:00Z"
+      },
+      {
+        "id": "response_789",
+        "title": "Yeni Kullanıcı Hoş Geldin",
+        "content": "Hoş geldiniz! Hesabınız başarıyla oluşturuldu.",
+        "type": "greeting",
+        "category": "welcome",
+        "language": "tr",
+        "tags": ["welcome", "new-user", "registration"],
+        "relevance": 0.85,
+        "matches": [
+          {
+            "field": "title",
+            "text": "Yeni Kullanıcı <mark>Hoş</mark> <mark>Geldin</mark>",
+            "score": 0.85
+          },
+          {
+            "field": "content",
+            "text": "<mark>Hoş</mark> <mark>geldiniz</mark>! Hesabınız başarıyla oluşturuldu.",
+            "score": 0.9
+          }
+        ],
+        "usage": {
+          "count": 75,
+          "lastUsed": "2024-01-15T09:45:00Z"
+        },
+        "createdAt": "2024-01-14T15:20:00Z"
+      }
+    ],
+    "totalResults": 15,
+    "showingResults": 2,
+    "searchTime": 45,
+    "filters": {
+      "type": "greeting",
+      "language": "tr",
+      "category": "welcome",
+      "tags": ["welcome", "greeting"]
+    },
+    "suggestions": [
+      {
+        "type": "query",
+        "text": "hoş geldiniz",
+        "reason": "Benzer arama terimi"
+      },
+      {
+        "type": "tag",
+        "text": "automated",
+        "reason": "Popüler etiket"
+      }
+    ],
+    "facets": {
+      "types": {
+        "greeting": 15,
+        "help": 5,
+        "error": 2
+      },
+      "categories": {
+        "welcome": 12,
+        "support": 8,
+        "success": 2
+      },
+      "languages": {
+        "tr": 18,
+        "en": 4
+      }
+    }
+  },
+  "message": "Arama başarıyla tamamlandı"
+}
+```
+
+---
+
+## Yanıt Türleri
+
+| Tür | Açıklama | Kullanım |
+|-----|----------|----------|
+| `greeting` | Karşılama | Hoş geldin mesajları |
+| `help` | Yardım | Destek yanıtları |
+| `error` | Hata | Hata mesajları |
+| `confirmation` | Onay | Onay mesajları |
+| `custom` | Özel | Özel yanıtlar |
+
+## Yanıt Kategorileri
+
+| Kategori | Açıklama | Örnekler |
+|----------|----------|----------|
+| `welcome` | Hoş geldin | Karşılama mesajları |
+| `support` | Destek | Yardım yanıtları |
+| `error` | Hata | Hata mesajları |
+| `success` | Başarı | Başarı mesajları |
+| `info` | Bilgi | Bilgilendirme |
+
+## Yanıt Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `active` | Aktif |
+| `inactive` | Pasif |
+| `draft` | Taslak |
+| `archived` | Arşivlenmiş |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `RESPONSE_NOT_FOUND` | Yanıt bulunamadı |
+| `RESPONSE_CREATION_FAILED` | Yanıt oluşturulamadı |
+| `RESPONSE_DELETION_FAILED` | Yanıt silinemedi |
+| `INVALID_RESPONSE_ID` | Geçersiz yanıt ID'si |
+| `INVALID_RESPONSE_DATA` | Geçersiz yanıt verisi |
+| `RESPONSE_ALREADY_EXISTS` | Yanıt zaten mevcut |
+| `INSUFFICIENT_PERMISSIONS` | Yetersiz yetki |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- Yanıt içeriklerini güvenli bir şekilde saklayın
+- Hassas bilgileri yanıtlarda saklamayın
+- Yanıt erişimini sınırlayın
+- Düzenli olarak yanıt içeriklerini gözden geçirin
+- Düzenli olarak güvenlik denetimleri yapın
+
+## Yanıt Yönetimi
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+// Yanıt oluşturma
+const response = await responses.create({
+  title: "Hoş Geldiniz",
+  content: "Merhaba!",
+  type: "greeting",
+  category: "welcome"
+});
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+// Yanıt listesi
+const responsesList = await responses.list({
+  type: "greeting",
+  limit: 10
+});
 
-try {
-  // 1. Yanıtları listele
-  const responses = await zapi.responses.list({ limit: 10, status: 'active' });
-  console.log('Toplam yanıt:', responses.data.pagination.totalItems);
-  
-  // 2. Yeni yanıt oluştur
-  const create = await zapi.responses.create({
-    name: 'Error Response',
-    type: 'template',
-    content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.',
-    metadata: {
-      category: 'error',
-      language: 'tr',
-      tags: ['error', 'apology', 'retry']
-    }
+// Yanıt detayları
+const responseDetails = await responses.get("response_123");
+
+// Yanıt silme
+await responses.delete("response_123");
+
+// Yanıt arama
+const searchResults = await responses.search({
+  query: "hoş geldin",
+  type: "greeting"
+});
+
+// Yanıt istatistikleri
+const stats = await responses.getStats({
+  period: "30d"
+});
+```
+
+## Yanıt Analizi
+
+```typescript
+// İstatistik analizi
+const stats = await responses.getStats();
+
+// En çok kullanılan yanıt türü
+const topType = Object.entries(stats.data.usage.byType)
+  .sort(([,a], [,b]) => b - a)[0];
+console.log('En popüler tür:', topType[0], topType[1] + ' kullanım');
+
+// Performans metrikleri
+const performance = stats.data.performance;
+console.log('Ortalama yanıt süresi:', performance.averageResponseTime + 'ms');
+console.log('Başarı oranı:', performance.successRate + '%');
+console.log('Kullanıcı memnuniyeti:', performance.userSatisfaction + '/5');
+
+// Trend analizi
+const trends = stats.data.trends;
+console.log('Kullanım büyümesi:', trends.usageGrowth + '%');
+console.log('Performans iyileşmesi:', trends.responseTimeImprovement + '%');
+```
+
+## Yanıt Arama
+
+```typescript
+// Gelişmiş arama
+const searchResults = await responses.search({
+  query: "yardım",
+  type: "help",
+  language: "tr",
+  tags: ["support", "assistance"],
+  limit: 20
+});
+
+// Arama sonuçları
+searchResults.data.results.forEach(result => {
+  console.log(`${result.title} (Relevance: ${result.relevance})`);
+  result.matches.forEach(match => {
+    console.log(`  ${match.field}: ${match.text}`);
   });
-  const responseId = create.data.response.id;
-  console.log('Yeni yanıt oluşturuldu:', responseId);
-  
-  // 3. Yanıt detayını getir
-  const response = await zapi.responses.get(responseId);
-  console.log('Yanıt:', response.data.response.name);
-  console.log('İçerik:', response.data.response.content);
-  
-  // 4. Yanıt güncelle
-  const update = await zapi.responses.update(responseId, {
-    name: 'Updated Error Response',
-    content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin. Sorun devam ederse destek ekibimizle iletişime geçin.'
-  });
-  console.log('Yanıt güncellendi:', update.data.response.updatedAt);
-  
-  // 5. Yanıt aktif et
-  const activate = await zapi.responses.activate(responseId);
-  console.log('Yanıt aktif edildi:', activate.data.response.activatedAt);
-  
-  // 6. İstatistikleri getir
-  const stats = await zapi.responses.getStats({
-    period: 'monthly',
-    dateFrom: '2024-01-01',
-    dateTo: '2024-01-31'
-  });
-  console.log('Toplam yanıt:', stats.data.stats.overview.totalResponses);
-  console.log('Toplam kullanım:', stats.data.stats.overview.totalUsage);
-  
-  // 7. Metadata getir
-  const metadata = await zapi.responses.getMetadata(responseId, 'custom');
-  console.log('Metadata:', metadata.data.metadata.value.priority);
-  
-  // 8. Yanıt pasif et
-  const deactivate = await zapi.responses.deactivate(responseId);
-  console.log('Yanıt pasif edildi:', deactivate.data.response.deactivatedAt);
-  
-  // 9. Yanıt sil
-  const deleteResponse = await zapi.responses.delete(responseId);
-  console.log('Yanıt silindi:', deleteResponse.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
+});
+
+// Arama önerileri
+const suggestions = searchResults.data.suggestions;
+suggestions.forEach(suggestion => {
+  console.log(`Öneri: ${suggestion.text} (${suggestion.reason})`);
+});
+
+// Arama filtreleri
+const facets = searchResults.data.facets;
+console.log('Türler:', facets.types);
+console.log('Kategoriler:', facets.categories);
+console.log('Diller:', facets.languages);
+```
+
+## Yanıt Optimizasyonu
+
+```typescript
+// Performans analizi
+const stats = await responses.getStats({ includePerformance: true });
+const topPerformers = stats.data.performance.topPerformers;
+
+topPerformers.forEach(performer => {
+  console.log(`${performer.title}:`);
+  console.log(`  Kullanım: ${performer.usage}`);
+  console.log(`  Memnuniyet: ${performer.satisfaction}/5`);
+  console.log(`  Başarı oranı: ${performer.successRate}%`);
+});
+
+// İyileştirme önerileri
+const insights = stats.data.insights;
+insights.forEach(insight => {
+  console.log(`${insight.type}: ${insight.message} (Etki: ${insight.impact})`);
+});
 ```

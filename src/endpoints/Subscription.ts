@@ -1,6 +1,6 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, Subscription } from '../types';
+import { ApiResponse } from '../types';
 
 /**
  * Subscription - Abonelik yönetimi endpoint'leri

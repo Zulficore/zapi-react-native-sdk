@@ -1,585 +1,654 @@
-# Admin Endpoint - 15 Metod
+# Admin Endpoint
 
-Yönetici işlemleri için kullanılan endpoint.
+Yönetici paneli endpoint'leri - Sistem yönetimi, cache temizleme, kuyruk yönetimi, cron işlemleri ve yedekleme.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const admin = zapi.admin;
+```
 
 ## Metodlar
 
-### 1. getStats(): Promise<ApiResponse>
-Sistem istatistiklerini getirir.
+### 1. getDashboard()
 
-**Detaylı Örnek:**
+Admin dashboard bilgilerini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const stats = await zapi.admin.getStats();
+const result = await admin.getDashboard();
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Dashboard bilgileri:', result.data);
+  const { stats, recentActivity } = result.data;
+} else {
+  console.error('Dashboard getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Sistem istatistikleri getirildi",
   "data": {
     "stats": {
-      "overview": {
-        "totalUsers": 1250,
-        "activeUsers": 1180,
-        "totalApps": 45,
-        "activeApps": 42,
-        "totalRequests": 125000,
-        "totalRevenue": 12500.00
-      },
-      "users": {
-        "newUsersToday": 12,
-        "newUsersThisWeek": 85,
-        "newUsersThisMonth": 320,
-        "activeUsersToday": 450,
-        "activeUsersThisWeek": 850,
-        "activeUsersThisMonth": 1180
-      },
-      "apps": {
-        "newAppsToday": 2,
-        "newAppsThisWeek": 8,
-        "newAppsThisMonth": 25,
-        "activeAppsToday": 35,
-        "activeAppsThisWeek": 40,
-        "activeAppsThisMonth": 42
-      },
-      "requests": {
-        "requestsToday": 2500,
-        "requestsThisWeek": 17500,
-        "requestsThisMonth": 75000,
-        "averageResponseTime": "245ms",
-        "errorRate": 0.8
-      },
-      "revenue": {
-        "revenueToday": 125.00,
-        "revenueThisWeek": 875.00,
-        "revenueThisMonth": 3750.00,
-        "averageRevenuePerUser": 10.00,
-        "churnRate": 5.6
+      "totalUsers": 1250,
+      "activeUsers": 980,
+      "totalRequests": 50000,
+      "totalTokens": 2000000,
+      "revenue": 15000.50
+    },
+    "recentActivity": [
+      {
+        "type": "user_registration",
+        "message": "Yeni kullanıcı kaydı",
+        "timestamp": "2024-01-15T10:30:00Z"
       }
-    }
-  }
+    ]
+  },
+  "message": "Dashboard bilgileri başarıyla getirildi"
 }
-*/
 ```
 
-### 2. getQueueStats(): Promise<ApiResponse>
-Kuyruk istatistiklerini getirir.
+---
 
-**Detaylı Örnek:**
+### 2. clearCache(pattern: string | null)
+
+Cache'i temizler
+
+**Parametreler:**
+- `pattern: string | null` - Temizlenecek cache deseni (opsiyonel)
+
+**Örnek Kullanım:**
+
 ```typescript
-const queueStats = await zapi.admin.getQueueStats();
+// Tüm cache'i temizle
+const result = await admin.clearCache();
 
-// Başarılı çıktı:
-/*
+// Belirli bir pattern'i temizle
+const result = await admin.clearCache("user_*");
+
+if (result.success) {
+  console.log('Cache temizlendi:', result.data);
+} else {
+  console.error('Cache temizleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Kuyruk istatistikleri getirildi",
   "data": {
-    "queueStats": {
-      "overview": {
-        "totalJobs": 1250,
-        "pendingJobs": 45,
-        "processingJobs": 8,
-        "completedJobs": 1185,
-        "failedJobs": 12
+    "clearedKeys": 150,
+    "pattern": "user_*"
+  },
+  "message": "Cache başarıyla temizlendi"
+}
+```
+
+---
+
+### 3. getStats()
+
+Sistem istatistiklerini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await admin.getStats();
+
+if (result.success) {
+  console.log('Sistem istatistikleri:', result.data);
+  const { memory, cpu, disk } = result.data;
+} else {
+  console.error('İstatistik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "memory": {
+      "used": "2.5GB",
+      "total": "8GB",
+      "percentage": 31.25
+    },
+    "cpu": {
+      "usage": 45.2,
+      "cores": 4
+    },
+    "disk": {
+      "used": "150GB",
+      "total": "500GB",
+      "percentage": 30
+    }
+  },
+  "message": "Sistem istatistikleri başarıyla getirildi"
+}
+```
+
+---
+
+### 4. getQueueStats()
+
+Kuyruk istatistiklerini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await admin.getQueueStats();
+
+if (result.success) {
+  console.log('Kuyruk istatistikleri:', result.data);
+  const { pending, processing, completed, failed } = result.data;
+} else {
+  console.error('Kuyruk istatistik hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "pending": 25,
+    "processing": 5,
+    "completed": 1500,
+    "failed": 12,
+    "total": 1542
+  },
+  "message": "Kuyruk istatistikleri başarıyla getirildi"
+}
+```
+
+---
+
+### 5. pauseQueue()
+
+Kuyruğu duraklatır
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await admin.pauseQueue();
+
+if (result.success) {
+  console.log('Kuyruk duraklatıldı');
+} else {
+  console.error('Kuyruk duraklatma hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "paused",
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Kuyruk başarıyla duraklatıldı"
+}
+```
+
+---
+
+### 6. resumeQueue()
+
+Kuyruğu devam ettirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await admin.resumeQueue();
+
+if (result.success) {
+  console.log('Kuyruk devam ettirildi');
+} else {
+  console.error('Kuyruk devam ettirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "running",
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Kuyruk başarıyla devam ettirildi"
+}
+```
+
+---
+
+### 7. cleanQueue(type: string)
+
+Kuyruğu temizler
+
+**Parametreler:**
+- `type: string` - Temizlenecek kuyruk tipi (varsayılan: 'completed')
+
+**Örnek Kullanım:**
+
+```typescript
+// Tamamlanan işleri temizle
+const result = await admin.cleanQueue("completed");
+
+// Başarısız işleri temizle
+const result = await admin.cleanQueue("failed");
+
+if (result.success) {
+  console.log('Kuyruk temizlendi:', result.data);
+} else {
+  console.error('Kuyruk temizleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "cleanedJobs": 150,
+    "type": "completed"
+  },
+  "message": "Kuyruk başarıyla temizlendi"
+}
+```
+
+---
+
+### 8. getCronStatus()
+
+Cron işlemlerinin durumunu getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await admin.getCronStatus();
+
+if (result.success) {
+  console.log('Cron durumu:', result.data);
+  const { jobs } = result.data;
+} else {
+  console.error('Cron durum hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobs": [
+      {
+        "name": "daily_cleanup",
+        "status": "running",
+        "lastRun": "2024-01-15T00:00:00Z",
+        "nextRun": "2024-01-16T00:00:00Z"
       },
-      "byType": [
-        {
-          "type": "email",
-          "pending": 20,
-          "processing": 3,
-          "completed": 500,
-          "failed": 5
-        },
-        {
-          "type": "sms",
-          "pending": 15,
-          "processing": 2,
-          "completed": 300,
-          "failed": 3
-        },
-        {
-          "type": "webhook",
-          "pending": 10,
-          "processing": 3,
-          "completed": 385,
-          "failed": 4
-        }
-      ],
-      "performance": {
-        "averageProcessingTime": "3.2 seconds",
-        "throughput": "125 jobs/hour",
-        "successRate": 99.0,
-        "failureRate": 1.0
+      {
+        "name": "monthly_report",
+        "status": "scheduled",
+        "lastRun": "2024-01-01T00:00:00Z",
+        "nextRun": "2024-02-01T00:00:00Z"
       }
-    }
-  }
+    ]
+  },
+  "message": "Cron durumu başarıyla getirildi"
 }
-*/
 ```
 
-### 3. pauseQueue(): Promise<ApiResponse>
-Kuyruğu duraklatır.
+---
 
-**Detaylı Örnek:**
-```typescript
-const pauseQueue = await zapi.admin.pauseQueue();
+### 9. startCron(jobName: string)
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kuyruk duraklatıldı",
-  "data": {
-    "queue": {
-      "status": "paused",
-      "pausedAt": "2024-01-15T10:40:00Z",
-      "pausedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 4. resumeQueue(): Promise<ApiResponse>
-Kuyruğu devam ettirir.
-
-**Detaylı Örnek:**
-```typescript
-const resumeQueue = await zapi.admin.resumeQueue();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kuyruk devam ettirildi",
-  "data": {
-    "queue": {
-      "status": "running",
-      "resumedAt": "2024-01-15T10:40:00Z",
-      "resumedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 5. cleanQueue(type: string = 'completed'): Promise<ApiResponse>
-Kuyruğu temizler.
+Cron işlemini başlatır
 
 **Parametreler:**
-- `type` (string): Temizlenecek kuyruk tipi ('completed', 'failed', 'all')
+- `jobName: string` - İş adı
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const cleanQueue = await zapi.admin.cleanQueue('completed');
+const result = await admin.startCron("daily_cleanup");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kuyruk temizlendi",
-  "data": {
-    "cleanup": {
-      "type": "completed",
-      "cleanedJobs": 1185,
-      "cleanedAt": "2024-01-15T10:40:00Z",
-      "cleanedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+if (result.success) {
+  console.log('Cron işi başlatıldı:', result.data);
+} else {
+  console.error('Cron başlatma hatası:', result.error);
 }
-*/
 ```
 
-### 6. getCronStatus(): Promise<ApiResponse>
-Cron job durumunu getirir.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const cronStatus = await zapi.admin.getCronStatus();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Cron job durumu getirildi",
   "data": {
-    "cron": {
-      "status": "running",
-      "lastRun": "2024-01-15T10:30:00Z",
-      "nextRun": "2024-01-15T11:30:00Z",
-      "jobs": [
-        {
-          "name": "daily_cleanup",
-          "schedule": "0 2 * * *",
-          "lastRun": "2024-01-15T02:00:00Z",
-          "nextRun": "2024-01-16T02:00:00Z",
-          "status": "completed"
-        },
-        {
-          "name": "hourly_backup",
-          "schedule": "0 * * * *",
-          "lastRun": "2024-01-15T10:00:00Z",
-          "nextRun": "2024-01-15T11:00:00Z",
-          "status": "completed"
-        }
-      ]
-    }
-  }
+    "jobName": "daily_cleanup",
+    "status": "started",
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Cron işi başarıyla başlatıldı"
 }
-*/
 ```
 
-### 7. startCron(): Promise<ApiResponse>
-Cron job'ları başlatır.
+**Hata Yanıtı:**
 
-**Detaylı Örnek:**
-```typescript
-const startCron = await zapi.admin.startCron();
-
-// Başarılı çıktı:
-/*
+```json
 {
-  "success": true,
-  "message": "Cron job'lar başlatıldı",
-  "data": {
-    "cron": {
-      "status": "running",
-      "startedAt": "2024-01-15T10:40:00Z",
-      "startedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
+  "success": false,
+  "error": {
+    "code": "CRON_JOB_NOT_FOUND",
+    "message": "Cron işi bulunamadı"
   }
 }
-*/
 ```
 
-### 8. stopCron(): Promise<ApiResponse>
-Cron job'ları durdurur.
+---
 
-**Detaylı Örnek:**
-```typescript
-const stopCron = await zapi.admin.stopCron();
+### 10. stopCron(jobName: string)
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Cron job'lar durduruldu",
-  "data": {
-    "cron": {
-      "status": "stopped",
-      "stoppedAt": "2024-01-15T10:40:00Z",
-      "stoppedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 9. triggerDailyReset(): Promise<ApiResponse>
-Günlük sıfırlama işlemini tetikler.
-
-**Detaylı Örnek:**
-```typescript
-const triggerDailyReset = await zapi.admin.triggerDailyReset();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Günlük sıfırlama tetiklendi",
-  "data": {
-    "reset": {
-      "type": "daily",
-      "triggeredAt": "2024-01-15T10:40:00Z",
-      "triggeredBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "estimatedDuration": "5 minutes"
-    }
-  }
-}
-*/
-```
-
-### 10. getSystemInfo(): Promise<ApiResponse>
-Sistem bilgilerini getirir.
-
-**Detaylı Örnek:**
-```typescript
-const systemInfo = await zapi.admin.getSystemInfo();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Sistem bilgileri getirildi",
-  "data": {
-    "system": {
-      "version": "1.0.0",
-      "environment": "production",
-      "uptime": "15 days, 8 hours, 32 minutes",
-      "server": {
-        "hostname": "api-server-01",
-        "ip": "192.168.1.100",
-        "port": 3000,
-        "protocol": "https"
-      },
-      "database": {
-        "type": "MySQL",
-        "version": "8.0.32",
-        "status": "connected",
-        "connections": 12
-      },
-      "cache": {
-        "type": "Redis",
-        "version": "7.0.8",
-        "status": "connected",
-        "memory": "256MB"
-      },
-      "storage": {
-        "type": "AWS S3",
-        "region": "eu-west-1",
-        "status": "connected",
-        "usage": "2.5TB"
-      }
-    }
-  }
-}
-*/
-```
-
-### 11. clearCache(pattern: string = '*'): Promise<ApiResponse>
-Cache'i temizler.
+Cron işlemini durdurur
 
 **Parametreler:**
-- `pattern` (string): Temizlenecek cache pattern'i
+- `jobName: string` - İş adı
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const clearCache = await zapi.admin.clearCache('user:*');
+const result = await admin.stopCron("daily_cleanup");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Cache temizlendi",
-  "data": {
-    "cache": {
-      "pattern": "user:*",
-      "clearedKeys": 1250,
-      "clearedAt": "2024-01-15T10:40:00Z",
-      "clearedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+if (result.success) {
+  console.log('Cron işi durduruldu:', result.data);
+} else {
+  console.error('Cron durdurma hatası:', result.error);
 }
-*/
 ```
 
-### 12. triggerMonthlyReset(): Promise<ApiResponse>
-Aylık sıfırlama işlemini tetikler.
+**Başarılı Yanıt:**
 
-**Detaylı Örnek:**
-```typescript
-const triggerMonthlyReset = await zapi.admin.triggerMonthlyReset();
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Aylık sıfırlama tetiklendi",
   "data": {
-    "reset": {
-      "type": "monthly",
-      "triggeredAt": "2024-01-15T10:40:00Z",
-      "triggeredBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "estimatedDuration": "30 minutes"
-    }
-  }
+    "jobName": "daily_cleanup",
+    "status": "stopped",
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Cron işi başarıyla durduruldu"
 }
-*/
 ```
 
-### 13. getBackup(key: string): Promise<ApiResponse>
-Yedek bilgilerini getirir.
+---
+
+### 11. triggerDailyReset()
+
+Günlük sıfırlama işlemini tetikler
 
 **Parametreler:**
-- `key` (string): Yedek anahtarı
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const getBackup = await zapi.admin.getBackup('daily_backup_2024_01_15');
+const result = await admin.triggerDailyReset();
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yedek bilgileri getirildi",
-  "data": {
-    "backup": {
-      "key": "daily_backup_2024_01_15",
-      "name": "Daily Backup 2024-01-15",
-      "type": "full",
-      "status": "completed",
-      "size": "2.5GB",
-      "location": "s3://zapi-backups/daily/2024-01-15/",
-      "createdAt": "2024-01-15T02:00:00Z",
-      "completedAt": "2024-01-15T02:15:00Z",
-      "expiresAt": "2024-02-14T02:00:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Günlük sıfırlama tetiklendi:', result.data);
+} else {
+  console.error('Günlük sıfırlama hatası:', result.error);
 }
-*/
 ```
 
-### 14. getRestore(key: string, backup?: string, tables?: string): Promise<ApiResponse>
-Geri yükleme işlemini başlatır.
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "resetType": "daily",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "affectedRecords": 1250
+  },
+  "message": "Günlük sıfırlama başarıyla tetiklendi"
+}
+```
+
+---
+
+### 12. getSystemInfo()
+
+Sistem bilgilerini getirir
 
 **Parametreler:**
-- `key` (string): Yedek anahtarı
-- `backup` (string, opsiyonel): Yedek dosyası
-- `tables` (string, opsiyonel): Geri yüklenecek tablolar
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const getRestore = await zapi.admin.getRestore(
-  'daily_backup_2024_01_15',
-  'database.sql',
-  'users,apps,subscriptions'
-);
+const result = await admin.getSystemInfo();
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Geri yükleme başlatıldı",
-  "data": {
-    "restore": {
-      "key": "daily_backup_2024_01_15",
-      "backup": "database.sql",
-      "tables": "users,apps,subscriptions",
-      "status": "in_progress",
-      "startedAt": "2024-01-15T10:40:00Z",
-      "startedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "estimatedDuration": "15 minutes"
-    }
-  }
+if (result.success) {
+  console.log('Sistem bilgileri:', result.data);
+  const { version, uptime, environment } = result.data;
+} else {
+  console.error('Sistem bilgi hatası:', result.error);
 }
-*/
 ```
 
-### 15. getMetadata(path: string): Promise<ApiResponse>
-Metadata bilgilerini getirir.
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "version": "1.0.0",
+    "uptime": "7 days, 12 hours",
+    "environment": "production",
+    "nodeVersion": "18.17.0",
+    "platform": "linux"
+  },
+  "message": "Sistem bilgileri başarıyla getirildi"
+}
+```
+
+---
+
+### 13. getBackup(key: string)
+
+Yedekleme bilgilerini getirir
 
 **Parametreler:**
-- `path` (string): Metadata path'i
+- `key: string` - Yedekleme anahtarı
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const metadata = await zapi.admin.getMetadata('system_config');
+const result = await admin.getBackup("backup_20240115");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Yedekleme bilgileri:', result.data);
+} else {
+  console.error('Yedekleme bilgi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Metadata getirildi",
   "data": {
-    "metadata": {
-      "path": "system_config",
-      "value": {
-        "maintenanceMode": false,
-        "debugMode": false,
-        "logLevel": "info",
-        "rateLimiting": true,
-        "caching": true
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
+    "key": "backup_20240115",
+    "size": "2.5GB",
+    "createdAt": "2024-01-15T00:00:00Z",
+    "status": "completed",
+    "tables": ["users", "sessions", "logs"]
+  },
+  "message": "Yedekleme bilgileri başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BACKUP_NOT_FOUND",
+    "message": "Yedekleme bulunamadı"
   }
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+---
+
+### 14. getRestore(key: string, backup: string | null, tables: string | null)
+
+Geri yükleme işlemini başlatır
+
+**Parametreler:**
+- `key: string` - Yedekleme anahtarı
+- `backup: string | null` - Yedekleme dosyası (opsiyonel)
+- `tables: string | null` - Geri yüklenecek tablolar (opsiyonel)
+
+**Örnek Kullanım:**
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+// Tüm yedeklemeyi geri yükle
+const result = await admin.getRestore("backup_20240115", null, null);
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+// Belirli tabloları geri yükle
+const result = await admin.getRestore("backup_20240115", null, "users,sessions");
 
-try {
-  // 1. Sistem istatistiklerini getir
-  const stats = await zapi.admin.getStats();
-  console.log('Toplam kullanıcı:', stats.data.stats.overview.totalUsers);
-  console.log('Toplam gelir:', stats.data.stats.overview.totalRevenue);
-  
-  // 2. Kuyruk istatistiklerini getir
-  const queueStats = await zapi.admin.getQueueStats();
-  console.log('Toplam iş:', queueStats.data.queueStats.overview.totalJobs);
-  console.log('Bekleyen iş:', queueStats.data.queueStats.overview.pendingJobs);
-  
-  // 3. Kuyruğu duraklat
-  const pauseQueue = await zapi.admin.pauseQueue();
-  console.log('Kuyruk duraklatıldı:', pauseQueue.data.queue.pausedAt);
-  
-  // 4. Kuyruğu devam ettir
-  const resumeQueue = await zapi.admin.resumeQueue();
-  console.log('Kuyruk devam ettirildi:', resumeQueue.data.queue.resumedAt);
-  
-  // 5. Kuyruğu temizle
-  const cleanQueue = await zapi.admin.cleanQueue('completed');
-  console.log('Temizlenen iş:', cleanQueue.data.cleanup.cleanedJobs);
-  
-  // 6. Cron durumunu getir
-  const cronStatus = await zapi.admin.getCronStatus();
-  console.log('Cron durumu:', cronStatus.data.cron.status);
-  console.log('Son çalışma:', cronStatus.data.cron.lastRun);
-  
-  // 7. Cron'u başlat
-  const startCron = await zapi.admin.startCron();
-  console.log('Cron başlatıldı:', startCron.data.cron.startedAt);
-  
-  // 8. Cron'u durdur
-  const stopCron = await zapi.admin.stopCron();
-  console.log('Cron durduruldu:', stopCron.data.cron.stoppedAt);
-  
-  // 9. Günlük sıfırlama tetikle
-  const triggerDailyReset = await zapi.admin.triggerDailyReset();
-  console.log('Günlük sıfırlama:', triggerDailyReset.data.reset.triggeredAt);
-  
-  // 10. Sistem bilgilerini getir
-  const systemInfo = await zapi.admin.getSystemInfo();
-  console.log('Sistem versiyonu:', systemInfo.data.system.version);
-  console.log('Çalışma süresi:', systemInfo.data.system.uptime);
-  
-  // 11. Cache temizle
-  const clearCache = await zapi.admin.clearCache('user:*');
-  console.log('Temizlenen cache:', clearCache.data.cache.clearedKeys);
-  
-  // 12. Aylık sıfırlama tetikle
-  const triggerMonthlyReset = await zapi.admin.triggerMonthlyReset();
-  console.log('Aylık sıfırlama:', triggerMonthlyReset.data.reset.triggeredAt);
-  
-  // 13. Yedek bilgilerini getir
-  const getBackup = await zapi.admin.getBackup('daily_backup_2024_01_15');
-  console.log('Yedek boyutu:', getBackup.data.backup.size);
-  console.log('Yedek durumu:', getBackup.data.backup.status);
-  
-  // 14. Geri yükleme başlat
-  const getRestore = await zapi.admin.getRestore(
-    'daily_backup_2024_01_15',
-    'database.sql',
-    'users,apps'
-  );
-  console.log('Geri yükleme başlatıldı:', getRestore.data.restore.startedAt);
-  
-  // 15. Metadata getir
-  const metadata = await zapi.admin.getMetadata('system_config');
-  console.log('Bakım modu:', metadata.data.metadata.value.maintenanceMode);
-  console.log('Debug modu:', metadata.data.metadata.value.debugMode);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
+if (result.success) {
+  console.log('Geri yükleme başlatıldı:', result.data);
+} else {
+  console.error('Geri yükleme hatası:', result.error);
 }
 ```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "restoreId": "restore_12345",
+    "key": "backup_20240115",
+    "tables": ["users", "sessions"],
+    "status": "started",
+    "estimatedTime": "5 minutes"
+  },
+  "message": "Geri yükleme başarıyla başlatıldı"
+}
+```
+
+---
+
+### 15. triggerMonthlyReset()
+
+Aylık sıfırlama işlemini tetikler
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await admin.triggerMonthlyReset();
+
+if (result.success) {
+  console.log('Aylık sıfırlama tetiklendi:', result.data);
+} else {
+  console.error('Aylık sıfırlama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "resetType": "monthly",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "affectedRecords": 5000,
+    "resetPeriod": "2024-01"
+  },
+  "message": "Aylık sıfırlama başarıyla tetiklendi"
+}
+```
+
+---
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `INSUFFICIENT_PERMISSIONS` | Yetersiz yetki |
+| `CRON_JOB_NOT_FOUND` | Cron işi bulunamadı |
+| `BACKUP_NOT_FOUND` | Yedekleme bulunamadı |
+| `RESTORE_FAILED` | Geri yükleme başarısız |
+| `QUEUE_ALREADY_PAUSED` | Kuyruk zaten duraklatılmış |
+| `QUEUE_ALREADY_RUNNING` | Kuyruk zaten çalışıyor |
+| `SYSTEM_ERROR` | Sistem hatası |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- Tüm admin işlemleri yüksek yetki gerektirir
+- Cron işlemleri dikkatli kullanılmalıdır
+- Yedekleme ve geri yükleme işlemleri veri kaybına neden olabilir
+- Cache temizleme işlemi performansı etkileyebilir

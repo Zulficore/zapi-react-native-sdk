@@ -1,6 +1,7 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, Plan, ListOptions, PaginatedResponse, ValidationException } from '../types';
+import { ApiResponse } from '../types';
+import { ValidationException } from '../exceptions';
 
 /**
  * Plans - Abonelik planı yönetimi endpoint'leri

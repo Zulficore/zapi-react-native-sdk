@@ -1,430 +1,588 @@
-# Users Endpoint - 8 Metod
+# Users Endpoint
 
-Kullanıcı yönetimi için kullanılan endpoint.
+Kullanıcı yönetimi endpoint'leri - Kullanıcı listesi, detayları, güncelleme, silme ve metadata yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const users = zapi.users;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-Kullanıcıları listeler.
+### 1. list(options: any)
+
+Kullanıcıları listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `search` (string): Arama terimi
-  - `status` (string): Kullanıcı durumu
-  - `role` (string): Kullanıcı rolü
+- `options: any` - Listeleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const users = await zapi.users.list({
-  limit: 10,
+const result = await users.list({
   page: 1,
-  search: 'john',
-  status: 'active',
-  role: 'user'
+  limit: 20,
+  search: "john",
+  status: "active",
+  role: "user",
+  sortBy: "createdAt",
+  sortOrder: "desc"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Kullanıcılar:', result.data);
+  result.data.users.forEach(user => {
+    console.log(`- ${user.firstName} ${user.lastName} (${user.email})`);
+  });
+} else {
+  console.error('Kullanıcı listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Kullanıcılar getirildi",
   "data": {
     "users": [
       {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "email": "john@example.com",
-        "name": "John Doe",
+        "id": "user_123",
+        "email": "john.doe@example.com",
+        "firstName": "John",
+        "lastName": "Doe",
+        "phone": "+905551234567",
+        "phonePrefix": "+90",
         "role": "user",
         "status": "active",
-        "emailVerified": true,
+        "isEmailVerified": true,
+        "isPhoneVerified": true,
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z",
+        "lastLoginAt": "2024-01-15T10:30:00Z",
         "profile": {
-          "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-          "bio": "Full-stack developer",
+          "avatar": "https://example.com/avatar.jpg",
+          "bio": "Software Developer",
+          "website": "https://johndoe.com",
           "location": "Istanbul, Turkey"
-        },
-        "stats": {
-          "totalRequests": 1250,
-          "totalCost": 125.50,
-          "lastLogin": "2024-01-15T10:30:00Z"
-        },
-        "createdAt": "2024-01-01T10:30:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z"
+        }
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalItems": 45,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
+      "page": 1,
+      "limit": 20,
+      "total": 150,
+      "pages": 8
+    },
+    "filters": {
+      "status": "active",
+      "role": "user",
+      "search": "john"
     }
-  }
+  },
+  "message": "Kullanıcılar başarıyla listelendi"
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni kullanıcı oluşturur.
+---
+
+### 2. getStats()
+
+Kullanıcı istatistiklerini getirir
 
 **Parametreler:**
-- `data` (any): Kullanıcı verileri
-  - `email` (string): E-posta adresi
-  - `name` (string): Ad
-  - `role` (string): Rol
-  - `password` (string): Şifre
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.users.create({
-  email: 'newuser@example.com',
-  name: 'New User',
-  role: 'user',
-  password: 'securePassword123'
-});
+const result = await users.getStats();
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Kullanıcı istatistikleri:', result.data);
+  const { totalUsers, activeUsers, newUsers, verifiedUsers } = result.data;
+} else {
+  console.error('İstatistik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Kullanıcı başarıyla oluşturuldu",
   "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j1",
-      "email": "newuser@example.com",
-      "name": "New User",
-      "role": "user",
-      "status": "active",
-      "emailVerified": false,
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "location": null
-      },
-      "stats": {
-        "totalRequests": 0,
-        "totalCost": 0,
-        "lastLogin": null
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+    "totalUsers": 1500,
+    "activeUsers": 1200,
+    "inactiveUsers": 300,
+    "newUsers": 50,
+    "verifiedUsers": 1400,
+    "unverifiedUsers": 100,
+    "byRole": {
+      "admin": 5,
+      "moderator": 25,
+      "user": 1470
+    },
+    "byStatus": {
+      "active": 1200,
+      "inactive": 300
+    },
+    "byVerification": {
+      "emailVerified": 1400,
+      "phoneVerified": 1300,
+      "bothVerified": 1250
+    },
+    "growth": {
+      "last7Days": 25,
+      "last30Days": 100,
+      "last90Days": 300
+    },
+    "lastUpdated": "2024-01-15T10:30:00Z"
+  },
+  "message": "Kullanıcı istatistikleri başarıyla getirildi"
 }
-*/
 ```
 
-### 3. get(userId: string): Promise<ApiResponse>
-Belirli bir kullanıcının detaylarını getirir.
+---
+
+### 3. get(userId: string)
+
+Belirli bir kullanıcıyı getirir
 
 **Parametreler:**
-- `userId` (string): Kullanıcı ID'si
+- `userId: string` - Kullanıcı ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const user = await zapi.users.get('user_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await users.get("user_123");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Kullanıcı detayları:', result.data);
+  const { email, firstName, lastName, profile, settings } = result.data;
+} else {
+  console.error('Kullanıcı getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Kullanıcı detayları getirildi",
   "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "john@example.com",
-      "name": "John Doe",
-      "role": "user",
-      "status": "active",
-      "emailVerified": true,
-      "profile": {
-        "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "bio": "Full-stack developer",
-        "location": "Istanbul, Turkey",
-        "website": "https://johndoe.dev"
+    "id": "user_123",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "+905551234567",
+    "phonePrefix": "+90",
+    "role": "user",
+    "status": "active",
+    "isEmailVerified": true,
+    "isPhoneVerified": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "lastLoginAt": "2024-01-15T10:30:00Z",
+    "profile": {
+      "avatar": "https://example.com/avatar.jpg",
+      "bio": "Software Developer",
+      "website": "https://johndoe.com",
+      "location": "Istanbul, Turkey",
+      "birthDate": "1990-05-15",
+      "gender": "male"
+    },
+    "settings": {
+      "notifications": {
+        "email": true,
+        "push": true,
+        "sms": false
       },
-      "stats": {
-        "totalRequests": 1250,
-        "totalCost": 125.50,
-        "lastLogin": "2024-01-15T10:30:00Z",
-        "loginCount": 45
+      "privacy": {
+        "profileVisible": true,
+        "emailVisible": false
       },
-      "subscription": {
-        "plan": "premium",
-        "status": "active",
-        "expiresAt": "2024-02-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
+      "preferences": {
+        "language": "tr",
+        "timezone": "Europe/Istanbul",
+        "theme": "light"
+      }
+    },
+    "usage": {
+      "totalRequests": 1500,
+      "lastRequestAt": "2024-01-15T10:30:00Z",
+      "storageUsed": "2.5GB"
     }
-  }
+  },
+  "message": "Kullanıcı başarıyla getirildi"
 }
-*/
 ```
 
-### 4. update(userId: string, data: any): Promise<ApiResponse>
-Belirli bir kullanıcıyı günceller.
+---
+
+### 4. update(userId: string, data: any)
+
+Kullanıcıyı günceller
 
 **Parametreler:**
-- `userId` (string): Kullanıcı ID'si
-- `data` (any): Güncellenecek veriler
+- `userId: string` - Kullanıcı ID'si
+- `data: any` - Güncellenecek veriler
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const update = await zapi.users.update('user_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'John Doe Updated',
-  role: 'admin',
+const result = await users.update("user_123", {
+  firstName: "Jane",
+  lastName: "Smith",
   profile: {
-    bio: 'Senior Full-stack developer',
-    location: 'Istanbul, Turkey',
-    website: 'https://johndoe.dev'
+    bio: "Updated bio",
+    website: "https://janesmith.com"
+  },
+  settings: {
+    notifications: {
+      email: false,
+      push: true
+    }
   }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanıcı başarıyla güncellendi",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "john@example.com",
-      "name": "John Doe Updated",
-      "role": "admin",
-      "status": "active",
-      "profile": {
-        "avatar": "https://api.zapi.com/avatars/user_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "bio": "Senior Full-stack developer",
-        "location": "Istanbul, Turkey",
-        "website": "https://johndoe.dev"
-      },
-      "stats": {
-        "totalRequests": 1250,
-        "totalCost": 125.50,
-        "lastLogin": "2024-01-15T10:30:00Z",
-        "loginCount": 45
-      },
-      "subscription": {
-        "plan": "premium",
-        "status": "active",
-        "expiresAt": "2024-02-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Kullanıcı güncellendi:', result.data);
+} else {
+  console.error('Kullanıcı güncelleme hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(userId: string): Promise<ApiResponse>
-Belirli bir kullanıcıyı siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `userId` (string): Kullanıcı ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteUser = await zapi.users.delete('user_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Kullanıcı başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "email": "john@example.com",
-      "name": "John Doe Updated",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 6. activate(userId: string): Promise<ApiResponse>
-Belirli bir kullanıcıyı aktif eder.
-
-**Parametreler:**
-- `userId` (string): Kullanıcı ID'si
-
-**Detaylı Örnek:**
-```typescript
-const activate = await zapi.users.activate('user_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanıcı başarıyla aktif edildi",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "John Doe Updated",
-      "status": "active",
-      "activatedAt": "2024-01-15T10:40:00Z",
-      "activatedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 7. deactivate(userId: string): Promise<ApiResponse>
-Belirli bir kullanıcıyı pasif eder.
-
-**Parametreler:**
-- `userId` (string): Kullanıcı ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deactivate = await zapi.users.deactivate('user_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanıcı başarıyla pasif edildi",
-  "data": {
-    "user": {
-      "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "John Doe Updated",
-      "status": "inactive",
-      "deactivatedAt": "2024-01-15T10:40:00Z",
-      "deactivatedBy": "admin_user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 8. getStats(): Promise<ApiResponse>
-Kullanıcı istatistiklerini getirir.
-
-**Detaylı Örnek:**
-```typescript
-const stats = await zapi.users.getStats();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Kullanıcı istatistikleri getirildi",
-  "data": {
-    "stats": {
-      "overview": {
-        "totalUsers": 1250,
-        "activeUsers": 1180,
-        "inactiveUsers": 70,
-        "newUsersToday": 12,
-        "newUsersThisWeek": 85,
-        "newUsersThisMonth": 320
-      },
-      "byRole": [
-        {
-          "role": "user",
-          "count": 1200,
-          "percentage": 96.0
-        },
-        {
-          "role": "admin",
-          "count": 50,
-          "percentage": 4.0
-        }
-      ],
-      "byStatus": [
-        {
-          "status": "active",
-          "count": 1180,
-          "percentage": 94.4
-        },
-        {
-          "status": "inactive",
-          "count": 70,
-          "percentage": 5.6
-        }
-      ],
-      "growth": {
-        "daily": 12,
-        "weekly": 85,
-        "monthly": 320,
-        "yearly": 1250
+    "id": "user_123",
+    "email": "john.doe@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phone": "+905551234567",
+    "phonePrefix": "+90",
+    "role": "user",
+    "status": "active",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "profile": {
+      "avatar": "https://example.com/avatar.jpg",
+      "bio": "Updated bio",
+      "website": "https://janesmith.com",
+      "location": "Istanbul, Turkey"
+    },
+    "settings": {
+      "notifications": {
+        "email": false,
+        "push": true,
+        "sms": false
       }
     }
-  }
+  },
+  "message": "Kullanıcı başarıyla güncellendi"
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+---
+
+### 5. delete(userId: string)
+
+Kullanıcıyı siler
+
+**Parametreler:**
+- `userId: string` - Kullanıcı ID'si
+
+**Örnek Kullanım:**
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+const result = await users.delete("user_123");
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+if (result.success) {
+  console.log('Kullanıcı silindi');
+} else {
+  console.error('Kullanıcı silme hatası:', result.error);
+}
+```
 
-try {
-  // 1. Kullanıcıları listele
-  const users = await zapi.users.list({
-    limit: 10,
-    page: 1,
-    status: 'active',
-    role: 'user'
-  });
-  console.log('Toplam kullanıcı:', users.data.pagination.totalItems);
-  
-  // 2. Yeni kullanıcı oluştur
-  const create = await zapi.users.create({
-    email: 'newuser@example.com',
-    name: 'New User',
-    role: 'user',
-    password: 'securePassword123'
-  });
-  const userId = create.data.user.id;
-  console.log('Yeni kullanıcı oluşturuldu:', userId);
-  
-  // 3. Kullanıcı detayını getir
-  const user = await zapi.users.get(userId);
-  console.log('Kullanıcı:', user.data.user.name);
-  console.log('E-posta:', user.data.user.email);
-  
-  // 4. Kullanıcı güncelle
-  const update = await zapi.users.update(userId, {
-    name: 'New User Updated',
-    role: 'admin',
-    profile: {
-      bio: 'Senior developer',
-      location: 'Istanbul, Turkey'
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "deletedUserId": "user_123",
+    "deletedAt": "2024-01-15T10:30:00Z",
+    "deletedBy": "admin_456"
+  },
+  "message": "Kullanıcı başarıyla silindi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_DELETION_FAILED",
+    "message": "Kullanıcı silinemedi"
+  }
+}
+```
+
+---
+
+### 6. getMetadata(userId: string, path: string)
+
+Kullanıcı metadata bilgilerini getirir
+
+**Parametreler:**
+- `userId: string` - Kullanıcı ID'si
+- `path: string` - Metadata yolu (varsayılan: '')
+
+**Örnek Kullanım:**
+
+```typescript
+// Tüm metadata'yı getir
+const result = await users.getMetadata("user_123");
+
+// Belirli bir path'i getir
+const result = await users.getMetadata("user_123", "preferences.theme");
+
+if (result.success) {
+  console.log('Metadata:', result.data);
+} else {
+  console.error('Metadata getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "preferences": {
+      "theme": "dark",
+      "language": "tr",
+      "timezone": "Europe/Istanbul",
+      "dateFormat": "DD/MM/YYYY"
+    },
+    "customFields": {
+      "department": "Engineering",
+      "employeeId": "EMP001",
+      "manager": "manager_456"
+    },
+    "tags": ["vip", "beta-tester", "premium"],
+    "notes": "Important customer",
+    "lastUpdated": "2024-01-15T10:30:00Z"
+  },
+  "message": "Metadata başarıyla getirildi"
+}
+```
+
+---
+
+### 7. updateMetadata(userId: string, path: string, value: any)
+
+Kullanıcı metadata bilgilerini günceller
+
+**Parametreler:**
+- `userId: string` - Kullanıcı ID'si
+- `path: string` - Metadata yolu
+- `value: any` - Güncellenecek değer
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await users.updateMetadata("user_123", "preferences.theme", "light");
+
+if (result.success) {
+  console.log('Metadata güncellendi:', result.data);
+} else {
+  console.error('Metadata güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "preferences": {
+      "theme": "light",
+      "language": "tr",
+      "timezone": "Europe/Istanbul",
+      "dateFormat": "DD/MM/YYYY"
     }
+  },
+  "message": "Metadata başarıyla güncellendi"
+}
+```
+
+---
+
+### 8. deleteMetadata(userId: string, path: string)
+
+Kullanıcı metadata bilgilerini siler
+
+**Parametreler:**
+- `userId: string` - Kullanıcı ID'si
+- `path: string` - Metadata yolu
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await users.deleteMetadata("user_123", "customFields.employeeId");
+
+if (result.success) {
+  console.log('Metadata silindi');
+} else {
+  console.error('Metadata silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Metadata başarıyla silindi"
+}
+```
+
+---
+
+## Kullanıcı Rolleri
+
+| Rol | Açıklama | Yetkiler |
+|-----|----------|----------|
+| `admin` | Sistem yöneticisi | Tüm yetkiler |
+| `moderator` | Moderator | Kullanıcı yönetimi, içerik moderasyonu |
+| `user` | Standart kullanıcı | Temel işlemler |
+| `guest` | Misafir kullanıcı | Sınırlı erişim |
+
+## Kullanıcı Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `active` | Aktif kullanıcı |
+| `inactive` | Pasif kullanıcı |
+| `suspended` | Askıya alınmış |
+| `banned` | Yasaklanmış |
+| `pending` | Onay bekliyor |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `USER_NOT_FOUND` | Kullanıcı bulunamadı |
+| `USER_UPDATE_FAILED` | Kullanıcı güncellenemedi |
+| `USER_DELETION_FAILED` | Kullanıcı silinemedi |
+| `INVALID_USER_ID` | Geçersiz kullanıcı ID'si |
+| `INSUFFICIENT_PERMISSIONS` | Yetersiz yetki |
+| `USER_ALREADY_EXISTS` | Kullanıcı zaten mevcut |
+| `INVALID_USER_DATA` | Geçersiz kullanıcı verisi |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- Kullanıcı verilerini güvenli bir şekilde işleyin
+- Hassas bilgileri metadata'da saklamayın
+- Kullanıcı silme işlemlerini dikkatli yapın
+- Kişisel verileri koruma yasalarına uyun
+- Düzenli olarak güvenlik denetimleri yapın
+
+## Kullanıcı Yönetimi
+
+```typescript
+// Kullanıcı listesi
+const users = await users.list({
+  page: 1,
+  limit: 50,
+  status: "active"
+});
+
+// Kullanıcı detayları
+const user = await users.get("user_123");
+
+// Kullanıcı güncelleme
+await users.update("user_123", {
+  firstName: "New Name",
+  profile: { bio: "Updated bio" }
+});
+
+// Metadata yönetimi
+await users.updateMetadata("user_123", "preferences.theme", "dark");
+```
+
+## İstatistik ve Analitik
+
+```typescript
+// Kullanıcı istatistikleri
+const stats = await users.getStats();
+
+console.log('Toplam kullanıcı:', stats.data.totalUsers);
+console.log('Aktif kullanıcı:', stats.data.activeUsers);
+console.log('Yeni kullanıcı (7 gün):', stats.data.growth.last7Days);
+
+// Kullanıcı büyüme analizi
+const growth = stats.data.growth;
+console.log('Büyüme oranı:', (growth.last7Days / stats.data.totalUsers) * 100);
+```
+
+## Arama ve Filtreleme
+
+```typescript
+// Gelişmiş arama
+const result = await users.list({
+  search: "john",
+  status: "active",
+  role: "user",
+  sortBy: "lastLoginAt",
+  sortOrder: "desc",
+  page: 1,
+  limit: 20
+});
+
+// Filtreleme seçenekleri
+const filters = {
+  status: ["active", "inactive"],
+  role: ["user", "moderator"],
+  isEmailVerified: true,
+  createdAfter: "2024-01-01",
+  createdBefore: "2024-12-31"
+};
+```
+
+## Toplu İşlemler
+
+```typescript
+// Toplu kullanıcı güncelleme
+const userIds = ["user_123", "user_456", "user_789"];
+for (const userId of userIds) {
+  await users.update(userId, {
+    settings: { notifications: { email: false } }
   });
-  console.log('Kullanıcı güncellendi:', update.data.user.updatedAt);
-  
-  // 5. Kullanıcı aktif et
-  const activate = await zapi.users.activate(userId);
-  console.log('Kullanıcı aktif edildi:', activate.data.user.activatedAt);
-  
-  // 6. Kullanıcı istatistiklerini getir
-  const stats = await zapi.users.getStats();
-  console.log('Toplam kullanıcı:', stats.data.stats.overview.totalUsers);
-  console.log('Aktif kullanıcı:', stats.data.stats.overview.activeUsers);
-  
-  // 7. Kullanıcı pasif et
-  const deactivate = await zapi.users.deactivate(userId);
-  console.log('Kullanıcı pasif edildi:', deactivate.data.user.deactivatedAt);
-  
-  // 8. Kullanıcı sil
-  const deleteUser = await zapi.users.delete(userId);
-  console.log('Kullanıcı silindi:', deleteUser.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
+}
+
+// Toplu metadata güncelleme
+for (const userId of userIds) {
+  await users.updateMetadata(userId, "tags", ["bulk-updated"]);
 }
 ```

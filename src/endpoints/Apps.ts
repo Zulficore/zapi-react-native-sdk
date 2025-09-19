@@ -1,6 +1,7 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, App, ListOptions, PaginatedResponse, ValidationException } from '../types';
+import { ApiResponse } from '../types';
+import { ValidationException } from '../exceptions';
 
 /**
  * Apps - Uygulama yönetimi endpoint'leri

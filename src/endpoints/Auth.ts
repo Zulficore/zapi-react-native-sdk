@@ -1,11 +1,6 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import {
-  LoginRequest,
-  LoginResponse,
-  RegisterRequest,
-  ApiResponse,
-} from '../types';
+import { ApiResponse } from '../types';
 
 /**
  * Auth - Kimlik doğrulama endpoint'leri
@@ -38,7 +33,7 @@ export class Auth extends BaseEndpoint {
       delete data.appId; // Header'a ekledikten sonra data'dan çıkar
     }
     
-    return this.getHttpClient().post('/auth/register', data, headers);
+    return this.getHttpClient().post('/auth/register', data, { headers });
   }
 
   /**
@@ -62,7 +57,7 @@ export class Auth extends BaseEndpoint {
       delete data.appId; // Header'a ekledikten sonra data'dan çıkar
     }
     
-    return this.getHttpClient().post('/auth/login', data, headers);
+    return this.getHttpClient().post('/auth/login', data, { headers });
   }
 
   /**
@@ -166,7 +161,7 @@ export class Auth extends BaseEndpoint {
       headers['x-app-id'] = appId;
     }
     
-    return this.getHttpClient().post('/auth/otp', data, headers);
+    return this.getHttpClient().post('/auth/otp', data, { headers });
   }
 
   /**

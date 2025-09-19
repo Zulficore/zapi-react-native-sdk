@@ -21,9 +21,9 @@ import { ZAPIException } from './ZAPIException';
  * }
  */
 export class ServerException extends ZAPIException {
-  public readonly serverError?: string;
-  public readonly requestId?: string;
-  public readonly timestamp?: string;
+  public readonly serverError: string | undefined;
+  public readonly requestId: string | undefined;
+  public readonly timestamp: string | undefined;
 
   constructor(
     message: string = 'Sunucu hatası',
@@ -44,7 +44,7 @@ export class ServerException extends ZAPIException {
     this.timestamp = responseData?.timestamp;
   }
 
-  get errorType(): string {
+  override get errorType(): string {
     return 'ServerException';
   }
 
@@ -74,12 +74,20 @@ export class ServerException extends ZAPIException {
     timestamp?: string;
     isTemporary: boolean;
   } {
-    return {
-      serverError: this.serverError,
-      requestId: this.requestId,
-      timestamp: this.timestamp,
+    const result: {
+      serverError?: string;
+      requestId?: string;
+      timestamp?: string;
+      isTemporary: boolean;
+    } = {
       isTemporary: this.isTemporary,
     };
+    
+    if (this.serverError !== undefined) result.serverError = this.serverError;
+    if (this.requestId !== undefined) result.requestId = this.requestId;
+    if (this.timestamp !== undefined) result.timestamp = this.timestamp;
+    
+    return result;
   }
 
   /**

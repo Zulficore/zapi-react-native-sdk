@@ -1,559 +1,745 @@
-# Apps Endpoint - 11 Metod
+# Apps Endpoint
 
-Uygulama yönetimi için kullanılan endpoint.
+Uygulama yönetimi endpoint'leri - Uygulama oluşturma, güncelleme, silme, istatistikler ve metadata yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const apps = zapi.apps;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-Uygulamaları listeler.
+### 1. list(options: any)
+
+Uygulamaları listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `search` (string): Arama terimi
-  - `status` (string): Uygulama durumu
-  - `sortBy` (string): Sıralama alanı
-  - `sortOrder` (string): Sıralama yönü
+- `options: any` - Listeleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const apps = await zapi.apps.list({
-  limit: 10,
+const result = await apps.list({
   page: 1,
-  search: 'myapp',
-  status: 'active',
-  sortBy: 'createdAt',
-  sortOrder: 'desc'
+  limit: 10,
+  search: "my app",
+  status: "active"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Uygulamalar:', result.data);
+  result.data.apps.forEach(app => {
+    console.log(`- ${app.name} (${app.id})`);
+  });
+} else {
+  console.error('Uygulama listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Uygulamalar getirildi",
   "data": {
     "apps": [
       {
-        "id": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "MyApp",
-        "description": "My awesome application",
+        "id": "app_123",
+        "name": "My Mobile App",
+        "description": "Mobil uygulamam",
         "status": "active",
-        "type": "web",
-        "url": "https://myapp.com",
-        "icon": "https://api.zapi.com/icons/app_64f8a1b2c3d4e5f6g7h8i9j0.png",
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z",
         "owner": {
-          "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-          "name": "John Doe",
-          "email": "john@example.com"
+          "id": "user_123",
+          "email": "owner@example.com"
         },
-        "stats": {
-          "totalRequests": 1250,
-          "totalUsers": 45,
-          "lastActivity": "2024-01-15T10:30:00Z"
-        },
-        "createdAt": "2024-01-01T10:30:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z"
+        "usage": {
+          "requests": 1500,
+          "limit": 10000
+        }
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalItems": 45,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "pages": 3
     }
-  }
+  },
+  "message": "Uygulamalar başarıyla listelendi"
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni uygulama oluşturur.
+---
+
+### 2. create(data: any)
+
+Yeni uygulama oluşturur
 
 **Parametreler:**
-- `data` (any): Uygulama verileri
-  - `name` (string): Uygulama adı
-  - `description` (string): Açıklama
-  - `type` (string): Uygulama tipi
-  - `url` (string): Uygulama URL'i
+- `data: any` - Uygulama verileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.apps.create({
-  name: 'NewApp',
-  description: 'My new application',
-  type: 'mobile',
-  url: 'https://newapp.com'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Uygulama başarıyla oluşturuldu",
-  "data": {
-    "app": {
-      "id": "app_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "NewApp",
-      "description": "My new application",
-      "status": "active",
-      "type": "mobile",
-      "url": "https://newapp.com",
-      "icon": null,
-      "owner": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "stats": {
-        "totalRequests": 0,
-        "totalUsers": 0,
-        "lastActivity": null
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 3. get(appId: string): Promise<ApiResponse>
-Belirli bir uygulamanın detaylarını getirir.
-
-**Parametreler:**
-- `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const app = await zapi.apps.get('app_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Uygulama detayları getirildi",
-  "data": {
-    "app": {
-      "id": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "MyApp",
-      "description": "My awesome application",
-      "status": "active",
-      "type": "web",
-      "url": "https://myapp.com",
-      "icon": "https://api.zapi.com/icons/app_64f8a1b2c3d4e5f6g7h8i9j0.png",
-      "owner": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "stats": {
-        "totalRequests": 1250,
-        "totalUsers": 45,
-        "lastActivity": "2024-01-15T10:30:00Z"
-      },
-      "settings": {
-        "rateLimiting": true,
-        "caching": true,
-        "logging": true
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
-}
-*/
-```
-
-### 4. update(appId: string, data: any): Promise<ApiResponse>
-Belirli bir uygulamayı günceller.
-
-**Parametreler:**
-- `appId` (string): Uygulama ID'si
-- `data` (any): Güncellenecek veriler
-
-**Detaylı Örnek:**
-```typescript
-const update = await zapi.apps.update('app_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'MyApp Updated',
-  description: 'Updated awesome application',
-  url: 'https://myapp-updated.com',
+const result = await apps.create({
+  name: "Yeni Uygulamam",
+  description: "Bu benim yeni uygulamam",
+  type: "mobile",
+  platform: "react-native",
   settings: {
-    rateLimiting: true,
-    caching: false,
-    logging: true
+    allowRegistration: true,
+    requireEmailVerification: true,
+    maxUsers: 1000
   }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Uygulama başarıyla güncellendi",
-  "data": {
-    "app": {
-      "id": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "MyApp Updated",
-      "description": "Updated awesome application",
-      "status": "active",
-      "type": "web",
-      "url": "https://myapp-updated.com",
-      "icon": "https://api.zapi.com/icons/app_64f8a1b2c3d4e5f6g7h8i9j0.png",
-      "owner": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "stats": {
-        "totalRequests": 1250,
-        "totalUsers": 45,
-        "lastActivity": "2024-01-15T10:30:00Z"
-      },
-      "settings": {
-        "rateLimiting": true,
-        "caching": false,
-        "logging": true
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Uygulama oluşturuldu:', result.data);
+  const { id, name, apiKey } = result.data;
+} else {
+  console.error('Uygulama oluşturma hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(appId: string): Promise<ApiResponse>
-Belirli bir uygulamayı siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `appId` (string): Uygulama ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteApp = await zapi.apps.delete('app_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Uygulama başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "MyApp Updated",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
+    "id": "app_456",
+    "name": "Yeni Uygulamam",
+    "description": "Bu benim yeni uygulamam",
+    "type": "mobile",
+    "platform": "react-native",
+    "status": "active",
+    "apiKey": "ak_1234567890abcdef",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "settings": {
+      "allowRegistration": true,
+      "requireEmailVerification": true,
+      "maxUsers": 1000
     }
-  }
+  },
+  "message": "Uygulama başarıyla oluşturuldu"
 }
-*/
 ```
 
-### 6. activate(appId: string): Promise<ApiResponse>
-Belirli bir uygulamayı aktif eder.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "APP_CREATION_FAILED",
+    "message": "Uygulama oluşturulamadı"
+  }
+}
+```
+
+---
+
+### 3. get(appId: string)
+
+Belirli bir uygulamayı getirir
 
 **Parametreler:**
-- `appId` (string): Uygulama ID'si
+- `appId: string` - Uygulama ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const activate = await zapi.apps.activate('app_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await apps.get("app_123");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Uygulama detayları:', result.data);
+  const { name, description, status, settings } = result.data;
+} else {
+  console.error('Uygulama getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Uygulama başarıyla aktif edildi",
   "data": {
-    "app": {
-      "id": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "MyApp Updated",
-      "status": "active",
-      "activatedAt": "2024-01-15T10:40:00Z",
-      "activatedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
+    "id": "app_123",
+    "name": "My Mobile App",
+    "description": "Mobil uygulamam",
+    "type": "mobile",
+    "platform": "react-native",
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "owner": {
+      "id": "user_123",
+      "email": "owner@example.com",
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "settings": {
+      "allowRegistration": true,
+      "requireEmailVerification": true,
+      "maxUsers": 1000,
+      "features": {
+        "pushNotifications": true,
+        "analytics": true,
+        "crashReporting": true
+      }
+    },
+    "usage": {
+      "requests": 1500,
+      "limit": 10000,
+      "users": 45,
+      "storage": "2.5GB"
     }
-  }
+  },
+  "message": "Uygulama başarıyla getirildi"
 }
-*/
 ```
 
-### 7. deactivate(appId: string): Promise<ApiResponse>
-Belirli bir uygulamayı pasif eder.
+---
+
+### 4. update(appId: string, data: any)
+
+Uygulamayı günceller
 
 **Parametreler:**
-- `appId` (string): Uygulama ID'si
+- `appId: string` - Uygulama ID'si
+- `data: any` - Güncellenecek veriler
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const deactivate = await zapi.apps.deactivate('app_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Uygulama başarıyla pasif edildi",
-  "data": {
-    "app": {
-      "id": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "MyApp Updated",
-      "status": "inactive",
-      "deactivatedAt": "2024-01-15T10:40:00Z",
-      "deactivatedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
+const result = await apps.update("app_123", {
+  name: "Güncellenmiş Uygulama Adı",
+  description: "Yeni açıklama",
+  settings: {
+    allowRegistration: false,
+    maxUsers: 2000
   }
-}
-*/
-```
-
-### 8. getAppStats(appId: string, options: any = {}): Promise<ApiResponse>
-Uygulama istatistiklerini getirir.
-
-**Parametreler:**
-- `appId` (string): Uygulama ID'si
-- `options` (any): İstatistik seçenekleri
-
-**Detaylı Örnek:**
-```typescript
-const appStats = await zapi.apps.getAppStats('app_64f8a1b2c3d4e5f6g7h8i9j0', {
-  period: 'monthly',
-  dateFrom: '2024-01-01',
-  dateTo: '2024-01-31'
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Uygulama güncellendi:', result.data);
+} else {
+  console.error('Uygulama güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Uygulama istatistikleri getirildi",
   "data": {
-    "stats": {
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "period": "monthly",
-      "dateRange": {
-        "from": "2024-01-01",
-        "to": "2024-01-31"
+    "id": "app_123",
+    "name": "Güncellenmiş Uygulama Adı",
+    "description": "Yeni açıklama",
+    "status": "active",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "settings": {
+      "allowRegistration": false,
+      "requireEmailVerification": true,
+      "maxUsers": 2000
+    }
+  },
+  "message": "Uygulama başarıyla güncellendi"
+}
+```
+
+---
+
+### 5. delete(appId: string)
+
+Uygulamayı siler
+
+**Parametreler:**
+- `appId: string` - Uygulama ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apps.delete("app_123");
+
+if (result.success) {
+  console.log('Uygulama silindi');
+} else {
+  console.error('Uygulama silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Uygulama başarıyla silindi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "APP_DELETION_FAILED",
+    "message": "Uygulama silinemedi"
+  }
+}
+```
+
+---
+
+### 6. getStats(options: any)
+
+Tüm uygulamaların istatistiklerini getirir
+
+**Parametreler:**
+- `options: any` - İstatistik seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apps.getStats({
+  period: "30d",
+  includeInactive: false
+});
+
+if (result.success) {
+  console.log('Genel istatistikler:', result.data);
+  const { totalApps, activeApps, totalRequests, totalUsers } = result.data;
+} else {
+  console.error('İstatistik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalApps": 25,
+    "activeApps": 20,
+    "inactiveApps": 5,
+    "totalRequests": 150000,
+    "totalUsers": 5000,
+    "totalStorage": "50GB",
+    "period": "30d",
+    "growth": {
+      "apps": 5,
+      "requests": 15000,
+      "users": 500
+    },
+    "topApps": [
+      {
+        "id": "app_123",
+        "name": "My Mobile App",
+        "requests": 25000,
+        "users": 1000
+      }
+    ]
+  },
+  "message": "İstatistikler başarıyla getirildi"
+}
+```
+
+---
+
+### 7. getAppStats(appId: string, options: any)
+
+Belirli bir uygulamanın istatistiklerini getirir
+
+**Parametreler:**
+- `appId: string` - Uygulama ID'si
+- `options: any` - İstatistik seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apps.getAppStats("app_123", {
+  period: "7d",
+  includeDetails: true
+});
+
+if (result.success) {
+  console.log('Uygulama istatistikleri:', result.data);
+  const { requests, users, errors, performance } = result.data;
+} else {
+  console.error('Uygulama istatistik hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "appId": "app_123",
+    "period": "7d",
+    "requests": {
+      "total": 15000,
+      "successful": 14800,
+      "failed": 200,
+      "averageResponseTime": 150
+    },
+    "users": {
+      "total": 1000,
+      "active": 800,
+      "new": 50,
+      "retention": 85
+    },
+    "errors": {
+      "total": 200,
+      "byType": {
+        "validation": 100,
+        "authentication": 50,
+        "server": 50
+      }
+    },
+    "performance": {
+      "uptime": 99.9,
+      "averageLoadTime": 150,
+      "peakLoadTime": 300
+    },
+    "endpoints": [
+      {
+        "name": "auth.login",
+        "requests": 5000,
+        "averageResponseTime": 100
       },
-      "overview": {
-        "totalRequests": 1250,
-        "totalUsers": 45,
-        "totalRevenue": 125.00,
-        "averageResponseTime": "245ms",
-        "errorRate": 0.8
+      {
+        "name": "user.profile",
+        "requests": 3000,
+        "averageResponseTime": 80
+      }
+    ]
+  },
+  "message": "Uygulama istatistikleri başarıyla getirildi"
+}
+```
+
+---
+
+### 8. resetUsage(appId: string)
+
+Uygulamanın kullanım istatistiklerini sıfırlar
+
+**Parametreler:**
+- `appId: string` - Uygulama ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apps.resetUsage("app_123");
+
+if (result.success) {
+  console.log('Kullanım istatistikleri sıfırlandı');
+} else {
+  console.error('Kullanım sıfırlama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "appId": "app_123",
+    "resetAt": "2024-01-15T10:30:00Z",
+    "resetBy": "user_123"
+  },
+  "message": "Kullanım istatistikleri başarıyla sıfırlandı"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USAGE_RESET_FAILED",
+    "message": "Kullanım sıfırlama başarısız"
+  }
+}
+```
+
+---
+
+### 9. getMetadata(appId: string, path: string)
+
+Uygulama metadata bilgilerini getirir
+
+**Parametreler:**
+- `appId: string` - Uygulama ID'si
+- `path: string` - Metadata yolu (varsayılan: '')
+
+**Örnek Kullanım:**
+
+```typescript
+// Tüm metadata'yı getir
+const result = await apps.getMetadata("app_123");
+
+// Belirli bir path'i getir
+const result = await apps.getMetadata("app_123", "settings.theme");
+
+if (result.success) {
+  console.log('Metadata:', result.data);
+} else {
+  console.error('Metadata getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "settings": {
+      "theme": "dark",
+      "language": "tr",
+      "notifications": {
+        "email": true,
+        "push": true,
+        "sms": false
+      }
+    },
+    "features": {
+      "analytics": true,
+      "crashReporting": true,
+      "betaFeatures": false
+    },
+    "integrations": {
+      "firebase": {
+        "enabled": true,
+        "projectId": "my-project"
       },
-      "usage": {
-        "requestsByDay": [
-          {
-            "date": "2024-01-15",
-            "requests": 45,
-            "users": 12
-          }
-        ],
-        "requestsByHour": [
-          {
-            "hour": "10:00",
-            "requests": 15,
-            "users": 5
-          }
-        ]
-      },
-      "users": {
-        "newUsers": 12,
-        "activeUsers": 35,
-        "retentionRate": 85.0
+      "stripe": {
+        "enabled": false
       }
     }
-  }
+  },
+  "message": "Metadata başarıyla getirildi"
 }
-*/
 ```
 
-### 9. resetUsage(appId: string): Promise<ApiResponse>
-Uygulama kullanımını sıfırlar.
+---
+
+### 10. updateMetadata(appId: string, path: string, value: any)
+
+Uygulama metadata bilgilerini günceller
 
 **Parametreler:**
-- `appId` (string): Uygulama ID'si
+- `appId: string` - Uygulama ID'si
+- `path: string` - Metadata yolu
+- `value: any` - Güncellenecek değer
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const resetUsage = await zapi.apps.resetUsage('app_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await apps.updateMetadata("app_123", "settings.theme", "light");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Metadata güncellendi:', result.data);
+} else {
+  console.error('Metadata güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Uygulama kullanımı sıfırlandı",
   "data": {
-    "reset": {
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "resetAt": "2024-01-15T10:40:00Z",
-      "resetBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
+    "settings": {
+      "theme": "light",
+      "language": "tr",
+      "notifications": {
+        "email": true,
+        "push": true,
+        "sms": false
+      }
     }
-  }
+  },
+  "message": "Metadata başarıyla güncellendi"
 }
-*/
 ```
 
-### 10. getMetadata(appId: string, path: string): Promise<ApiResponse>
-Uygulama metadata bilgilerini getirir.
+---
+
+### 11. patchMetadata(appId: string, path: string, value: any)
+
+Uygulama metadata bilgilerini kısmi olarak günceller
 
 **Parametreler:**
-- `appId` (string): Uygulama ID'si
-- `path` (string): Metadata path'i
+- `appId: string` - Uygulama ID'si
+- `path: string` - Metadata yolu
+- `value: any` - Güncellenecek değer
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const metadata = await zapi.apps.getMetadata('app_64f8a1b2c3d4e5f6g7h8i9j0', 'settings');
+const result = await apps.patchMetadata("app_123", "settings.notifications.sms", true);
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Metadata güncellendi:', result.data);
+} else {
+  console.error('Metadata güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Metadata getirildi",
   "data": {
-    "metadata": {
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "settings",
-      "value": {
-        "rateLimiting": true,
-        "caching": false,
-        "logging": true,
-        "maxRequestsPerMinute": 100,
-        "maxRequestsPerHour": 1000
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
+    "settings": {
+      "theme": "light",
+      "language": "tr",
+      "notifications": {
+        "email": true,
+        "push": true,
+        "sms": true
+      }
     }
-  }
+  },
+  "message": "Metadata başarıyla güncellendi"
 }
-*/
 ```
 
-### 11. updateMetadata(appId: string, path: string, value: any): Promise<ApiResponse>
-Uygulama metadata bilgilerini günceller.
+---
+
+### 12. deleteMetadata(appId: string, path: string)
+
+Uygulama metadata bilgilerini siler
 
 **Parametreler:**
-- `appId` (string): Uygulama ID'si
-- `path` (string): Metadata path'i
-- `value` (any): Güncellenecek değer
+- `appId: string` - Uygulama ID'si
+- `path: string` - Metadata yolu
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const updateMetadata = await zapi.apps.updateMetadata('app_64f8a1b2c3d4e5f6g7h8i9j0', 'settings', {
-  rateLimiting: true,
-  caching: true,
-  logging: false,
-  maxRequestsPerMinute: 150,
-  maxRequestsPerHour: 1500
+const result = await apps.deleteMetadata("app_123", "settings.notifications.sms");
+
+if (result.success) {
+  console.log('Metadata silindi');
+} else {
+  console.error('Metadata silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Metadata başarıyla silindi"
+}
+```
+
+---
+
+## Uygulama Türleri
+
+| Tür | Açıklama | Özellikler |
+|-----|----------|------------|
+| `mobile` | Mobil uygulama | Push notifications, offline support |
+| `web` | Web uygulaması | Browser compatibility, SEO |
+| `desktop` | Masaüstü uygulaması | System integration, file access |
+| `api` | API servisi | Rate limiting, authentication |
+| `bot` | Bot uygulaması | Webhook support, automation |
+
+## Uygulama Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `active` | Aktif ve çalışıyor |
+| `inactive` | Pasif, çalışmıyor |
+| `suspended` | Askıya alınmış |
+| `pending` | Onay bekliyor |
+| `maintenance` | Bakım modunda |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `APP_NOT_FOUND` | Uygulama bulunamadı |
+| `APP_CREATION_FAILED` | Uygulama oluşturulamadı |
+| `APP_UPDATE_FAILED` | Uygulama güncellenemedi |
+| `APP_DELETION_FAILED` | Uygulama silinemedi |
+| `USAGE_RESET_FAILED` | Kullanım sıfırlama başarısız |
+| `INVALID_APP_ID` | Geçersiz uygulama ID'si |
+| `APP_ALREADY_EXISTS` | Uygulama zaten mevcut |
+| `INSUFFICIENT_PERMISSIONS` | Yetersiz yetki |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- API anahtarlarını güvenli bir yerde saklayın
+- Uygulama ayarlarını dikkatli yapılandırın
+- Kullanıcı verilerini güvenli bir şekilde işleyin
+- Metadata'da hassas bilgileri saklamayın
+- Düzenli olarak güvenlik güncellemeleri yapın
+
+## Uygulama Yönetimi
+
+```typescript
+// Uygulama oluşturma
+const newApp = await apps.create({
+  name: "My App",
+  type: "mobile",
+  platform: "react-native"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata başarıyla güncellendi",
-  "data": {
-    "metadata": {
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "settings",
-      "value": {
-        "rateLimiting": true,
-        "caching": true,
-        "logging": false,
-        "maxRequestsPerMinute": 150,
-        "maxRequestsPerHour": 1500
-      },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
+// Uygulama güncelleme
+await apps.update("app_123", {
+  name: "Updated App Name",
+  settings: { allowRegistration: false }
+});
+
+// İstatistikleri görüntüleme
+const stats = await apps.getAppStats("app_123", {
+  period: "30d"
+});
+
+// Metadata yönetimi
+await apps.updateMetadata("app_123", "settings.theme", "dark");
 ```
 
-## Tam Örnek Kullanım
+## Performans İzleme
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+// Uygulama performansını izleme
+const performance = await apps.getAppStats("app_123", {
+  period: "7d",
+  includeDetails: true
+});
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
-
-try {
-  // 1. Uygulamaları listele
-  const apps = await zapi.apps.list({
-    limit: 10,
-    page: 1,
-    status: 'active',
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
-  });
-  console.log('Toplam uygulama:', apps.data.pagination.totalItems);
-  
-  // 2. Yeni uygulama oluştur
-  const create = await zapi.apps.create({
-    name: 'NewApp',
-    description: 'My new application',
-    type: 'mobile',
-    url: 'https://newapp.com'
-  });
-  const appId = create.data.app.id;
-  console.log('Yeni uygulama oluşturuldu:', appId);
-  
-  // 3. Uygulama detayını getir
-  const app = await zapi.apps.get(appId);
-  console.log('Uygulama:', app.data.app.name);
-  console.log('Durum:', app.data.app.status);
-  
-  // 4. Uygulama güncelle
-  const update = await zapi.apps.update(appId, {
-    name: 'NewApp Updated',
-    description: 'Updated application',
-    url: 'https://newapp-updated.com'
-  });
-  console.log('Uygulama güncellendi:', update.data.app.updatedAt);
-  
-  // 5. Uygulama aktif et
-  const activate = await zapi.apps.activate(appId);
-  console.log('Uygulama aktif edildi:', activate.data.app.activatedAt);
-  
-  // 6. Uygulama istatistiklerini getir
-  const appStats = await zapi.apps.getAppStats(appId, {
-    period: 'monthly',
-    dateFrom: '2024-01-01',
-    dateTo: '2024-01-31'
-  });
-  console.log('Toplam istek:', appStats.data.stats.overview.totalRequests);
-  console.log('Toplam kullanıcı:', appStats.data.stats.overview.totalUsers);
-  
-  // 7. Kullanımı sıfırla
-  const resetUsage = await zapi.apps.resetUsage(appId);
-  console.log('Kullanım sıfırlandı:', resetUsage.data.reset.resetAt);
-  
-  // 8. Metadata getir
-  const metadata = await zapi.apps.getMetadata(appId, 'settings');
-  console.log('Rate limiting:', metadata.data.metadata.value.rateLimiting);
-  console.log('Caching:', metadata.data.metadata.value.caching);
-  
-  // 9. Metadata güncelle
-  const updateMetadata = await zapi.apps.updateMetadata(appId, 'settings', {
-    rateLimiting: true,
-    caching: true,
-    logging: false,
-    maxRequestsPerMinute: 150
-  });
-  console.log('Metadata güncellendi:', updateMetadata.data.metadata.updatedAt);
-  
-  // 10. Uygulama pasif et
-  const deactivate = await zapi.apps.deactivate(appId);
-  console.log('Uygulama pasif edildi:', deactivate.data.app.deactivatedAt);
-  
-  // 11. Uygulama sil
-  const deleteApp = await zapi.apps.delete(appId);
-  console.log('Uygulama silindi:', deleteApp.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
+console.log('Uptime:', performance.data.performance.uptime);
+console.log('Average Response Time:', performance.data.performance.averageLoadTime);
+console.log('Error Rate:', performance.data.errors.total / performance.data.requests.total);
 ```

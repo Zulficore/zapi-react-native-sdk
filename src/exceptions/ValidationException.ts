@@ -37,7 +37,7 @@ export class ValidationException extends ZAPIException {
     this.invalidFields = this.extractInvalidFields(responseData);
   }
 
-  get errorType(): string {
+  override get errorType(): string {
     return 'ValidationException';
   }
 

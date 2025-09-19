@@ -1,6 +1,7 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, ListOptions, PaginatedResponse, ValidationException } from '../types';
+import { ApiResponse } from '../types';
+import { ValidationException } from '../exceptions';
 
 /**
  * Admin - Yönetici endpoint'leri
@@ -183,21 +184,4 @@ export class Admin extends BaseEndpoint {
     return this.getHttpClient().post('/admin/cron/trigger/monthly-reset');
   }
 
-  /**
-   * Sistem backup bilgilerini getirir
-   */
-  async getBackup(key: string): Promise<ApiResponse> {
-    return this.getHttpClient().get('/admin/system/backup', { key });
-  }
-
-  /**
-   * Sistem restore bilgilerini getirir
-   */
-  async getRestore(key: string, backup: string | null = null, tables: string | null = null): Promise<ApiResponse> {
-    const params: any = { key };
-    if (backup) params.backup = backup;
-    if (tables) params.tables = tables;
-    
-    return this.getHttpClient().get('/admin/system/restore', params);
-  }
 }

@@ -1,472 +1,580 @@
-# APIKeys Endpoint - 9 Metod
+# APIKeys Endpoint
 
-API anahtarı yönetimi için kullanılan endpoint.
+API anahtarı yönetimi endpoint'leri - API anahtarı oluşturma, güncelleme, kullanım takibi ve güvenlik yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const apiKeys = zapi.apiKeys;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-API anahtarlarını listeler.
+### 1. list(options: any)
+
+API anahtarlarını listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `search` (string): Arama terimi
-  - `status` (string): Anahtar durumu
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const apiKeys = await zapi.apiKeys.list({
+// Tüm API anahtarlarını getir
+const result = await apiKeys.list();
+
+// Filtreleme ile getir
+const result = await apiKeys.list({
   limit: 10,
-  page: 1,
-  search: 'production',
-  status: 'active'
+  offset: 0,
+  status: "active"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('API anahtarları:', result.data);
+} else {
+  console.error('API anahtarı listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "API anahtarları getirildi",
   "data": {
     "apiKeys": [
       {
-        "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
+        "id": "key_123",
         "name": "Production API Key",
-        "key": "zapi_***",
+        "key": "zapi_****",
         "status": "active",
-        "permissions": ["read", "write"],
-        "rateLimit": {
-          "requestsPerMinute": 100,
-          "requestsPerHour": 1000,
-          "requestsPerDay": 10000
-        },
-        "usage": {
-          "totalRequests": 1250,
-          "lastUsed": "2024-01-15T10:30:00Z"
-        },
-        "expiresAt": "2024-12-31T23:59:59Z",
-        "createdAt": "2024-01-01T10:30:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z"
+        "roles": ["read", "write"],
+        "createdAt": "2024-01-15T10:30:00Z",
+        "lastUsedAt": "2024-01-15T10:30:00Z"
       }
     ],
-    "pagination": {
-      "currentPage": 1,
-      "totalPages": 2,
-      "totalItems": 15,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
-    }
-  }
+    "total": 1,
+    "page": 1,
+    "limit": 10
+  },
+  "message": "API anahtarları başarıyla listelendi"
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni API anahtarı oluşturur.
+---
+
+### 2. create(data: any)
+
+Yeni API anahtarı oluşturur
 
 **Parametreler:**
-- `data` (any): Anahtar verileri
-  - `name` (string): Anahtar adı
-  - `permissions` (string[]): İzinler
-  - `rateLimit` (any): Hız sınırları
+- `data: any` - API anahtarı bilgileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.apiKeys.create({
-  name: 'Development API Key',
-  permissions: ['read', 'write'],
+const result = await apiKeys.create({
+  name: "Mobile App API Key",
+  description: "Mobil uygulama için API anahtarı",
+  roles: ["read", "write"],
+  expiresAt: "2024-12-31T23:59:59Z",
+  allowedIPs: ["192.168.1.0/24"],
   rateLimit: {
-    requestsPerMinute: 50,
-    requestsPerHour: 500,
-    requestsPerDay: 5000
+    requests: 1000,
+    period: "hour"
   }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "API anahtarı başarıyla oluşturuldu",
-  "data": {
-    "apiKey": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Development API Key",
-      "key": "zapi_new_***",
-      "status": "active",
-      "permissions": ["read", "write"],
-      "rateLimit": {
-        "requestsPerMinute": 50,
-        "requestsPerHour": 500,
-        "requestsPerDay": 5000
-      },
-      "usage": {
-        "totalRequests": 0,
-        "lastUsed": null
-      },
-      "expiresAt": "2024-12-31T23:59:59Z",
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('API anahtarı oluşturuldu:', result.data);
+  // API anahtarını güvenli bir yerde saklayın
+  const { key } = result.data;
+} else {
+  console.error('API anahtarı oluşturma hatası:', result.error);
 }
-*/
 ```
 
-### 3. get(keyId: string): Promise<ApiResponse>
-Belirli bir anahtarın detaylarını getirir.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `keyId` (string): Anahtar ID'si
-
-**Detaylı Örnek:**
-```typescript
-const apiKey = await zapi.apiKeys.get('key_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "API anahtarı detayları getirildi",
   "data": {
-    "apiKey": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Production API Key",
-      "key": "zapi_***",
-      "status": "active",
-      "permissions": ["read", "write"],
-      "rateLimit": {
-        "requestsPerMinute": 100,
-        "requestsPerHour": 1000,
-        "requestsPerDay": 10000
-      },
-      "usage": {
-        "totalRequests": 1250,
-        "lastUsed": "2024-01-15T10:30:00Z"
-      },
-      "expiresAt": "2024-12-31T23:59:59Z",
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
+    "id": "key_123",
+    "name": "Mobile App API Key",
+    "key": "zapi_live_1234567890abcdef",
+    "description": "Mobil uygulama için API anahtarı",
+    "roles": ["read", "write"],
+    "status": "active",
+    "expiresAt": "2024-12-31T23:59:59Z",
+    "createdAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "API anahtarı başarıyla oluşturuldu"
 }
-*/
 ```
 
-### 4. update(keyId: string, data: any): Promise<ApiResponse>
-Belirli bir anahtarı günceller.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Geçersiz rol seçimi"
+  }
+}
+```
+
+---
+
+### 3. get(keyId: string)
+
+Belirli bir API anahtarını getirir
 
 **Parametreler:**
-- `keyId` (string): Anahtar ID'si
-- `data` (any): Güncellenecek veriler
+- `keyId: string` - API anahtarı ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const update = await zapi.apiKeys.update('key_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'Updated Production API Key',
-  permissions: ['read', 'write', 'admin'],
+const result = await apiKeys.get("key_123");
+
+if (result.success) {
+  console.log('API anahtarı detayı:', result.data);
+  const { name, roles, status, usage } = result.data;
+} else {
+  console.error('API anahtarı getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "key_123",
+    "name": "Mobile App API Key",
+    "key": "zapi_****",
+    "description": "Mobil uygulama için API anahtarı",
+    "roles": ["read", "write"],
+    "status": "active",
+    "expiresAt": "2024-12-31T23:59:59Z",
+    "allowedIPs": ["192.168.1.0/24"],
+    "rateLimit": {
+      "requests": 1000,
+      "period": "hour"
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastUsedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "API anahtarı başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "API_KEY_NOT_FOUND",
+    "message": "API anahtarı bulunamadı"
+  }
+}
+```
+
+---
+
+### 4. update(keyId: string, data: any)
+
+API anahtarını günceller
+
+**Parametreler:**
+- `keyId: string` - API anahtarı ID'si
+- `data: any` - Güncellenecek bilgiler
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apiKeys.update("key_123", {
+  name: "Updated Mobile App API Key",
+  description: "Güncellenmiş mobil uygulama API anahtarı",
+  roles: ["read"],
   rateLimit: {
-    requestsPerMinute: 150,
-    requestsPerHour: 1500,
-    requestsPerDay: 15000
+    requests: 2000,
+    period: "hour"
   }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "API anahtarı başarıyla güncellendi",
-  "data": {
-    "apiKey": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Production API Key",
-      "key": "zapi_***",
-      "status": "active",
-      "permissions": ["read", "write", "admin"],
-      "rateLimit": {
-        "requestsPerMinute": 150,
-        "requestsPerHour": 1500,
-        "requestsPerDay": 15000
-      },
-      "usage": {
-        "totalRequests": 1250,
-        "lastUsed": "2024-01-15T10:30:00Z"
-      },
-      "expiresAt": "2024-12-31T23:59:59Z",
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('API anahtarı güncellendi:', result.data);
+} else {
+  console.error('API anahtarı güncelleme hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(keyId: string): Promise<ApiResponse>
-Belirli bir anahtarı siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `keyId` (string): Anahtar ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteKey = await zapi.apiKeys.delete('key_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "API anahtarı başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Production API Key",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+    "id": "key_123",
+    "name": "Updated Mobile App API Key",
+    "description": "Güncellenmiş mobil uygulama API anahtarı",
+    "roles": ["read"],
+    "rateLimit": {
+      "requests": 2000,
+      "period": "hour"
+    },
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "API anahtarı başarıyla güncellendi"
 }
-*/
 ```
 
-### 6. activate(keyId: string): Promise<ApiResponse>
-Belirli bir anahtarı aktif eder.
+---
+
+### 5. delete(keyId: string)
+
+API anahtarını siler
 
 **Parametreler:**
-- `keyId` (string): Anahtar ID'si
+- `keyId: string` - API anahtarı ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const activate = await zapi.apiKeys.activate('key_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await apiKeys.delete("key_123");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "API anahtarı başarıyla aktif edildi",
-  "data": {
-    "apiKey": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Production API Key",
-      "status": "active",
-      "activatedAt": "2024-01-15T10:40:00Z",
-      "activatedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+if (result.success) {
+  console.log('API anahtarı silindi');
+} else {
+  console.error('API anahtarı silme hatası:', result.error);
 }
-*/
 ```
 
-### 7. deactivate(keyId: string): Promise<ApiResponse>
-Belirli bir anahtarı pasif eder.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `keyId` (string): Anahtar ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deactivate = await zapi.apiKeys.deactivate('key_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "API anahtarı başarıyla pasif edildi",
-  "data": {
-    "apiKey": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Production API Key",
-      "status": "inactive",
-      "deactivatedAt": "2024-01-15T10:40:00Z",
-      "deactivatedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+  "data": {},
+  "message": "API anahtarı başarıyla silindi"
 }
-*/
 ```
 
-### 8. regenerate(keyId: string): Promise<ApiResponse>
-Belirli bir anahtarı yeniden oluşturur.
+**Hata Yanıtı:**
 
-**Parametreler:**
-- `keyId` (string): Anahtar ID'si
-
-**Detaylı Örnek:**
-```typescript
-const regenerate = await zapi.apiKeys.regenerate('key_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
-  "success": true,
-  "message": "API anahtarı başarıyla yeniden oluşturuldu",
-  "data": {
-    "apiKey": {
-      "id": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Production API Key",
-      "key": "zapi_new_***",
-      "status": "active",
-      "permissions": ["read", "write", "admin"],
-      "rateLimit": {
-        "requestsPerMinute": 150,
-        "requestsPerHour": 1500,
-        "requestsPerDay": 15000
-      },
-      "usage": {
-        "totalRequests": 0,
-        "lastUsed": null
-      },
-      "expiresAt": "2024-12-31T23:59:59Z",
-      "regeneratedAt": "2024-01-15T10:40:00Z",
-      "regeneratedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
+  "success": false,
+  "error": {
+    "code": "API_KEY_IN_USE",
+    "message": "API anahtarı kullanımda olduğu için silinemiyor"
   }
 }
-*/
 ```
 
-### 9. getUsage(keyId: string): Promise<ApiResponse>
-Anahtar kullanım bilgilerini getirir.
+---
+
+### 6. getUsage(keyId: string)
+
+API anahtarı kullanım istatistiklerini getirir
 
 **Parametreler:**
-- `keyId` (string): Anahtar ID'si
+- `keyId: string` - API anahtarı ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const usage = await zapi.apiKeys.getUsage('key_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await apiKeys.getUsage("key_123");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Kullanım istatistikleri:', result.data);
+  const { currentPeriod, totalUsage, endpoints } = result.data;
+} else {
+  console.error('Kullanım istatistik hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Anahtar kullanım bilgileri getirildi",
   "data": {
-    "usage": {
-      "keyId": "key_64f8a1b2c3d4e5f6g7h8i9j0",
-      "summary": {
-        "totalRequests": 1250,
-        "requestsToday": 45,
-        "requestsThisWeek": 320,
-        "requestsThisMonth": 1250
+    "currentPeriod": {
+      "startDate": "2024-01-01",
+      "endDate": "2024-01-31",
+      "requestsUsed": 2500,
+      "requestsLimit": 10000,
+      "tokensUsed": 50000,
+      "tokensLimit": 100000
+    },
+    "totalUsage": {
+      "requests": 15000,
+      "tokens": 300000
+    },
+    "endpoints": {
+      "auth": {
+        "requests": 500,
+        "tokens": 10000
       },
-      "breakdown": {
-        "byEndpoint": [
-          {
-            "endpoint": "chat",
-            "requests": 800,
-            "percentage": 64.0
-          },
-          {
-            "endpoint": "images",
-            "requests": 300,
-            "percentage": 24.0
-          },
-          {
-            "endpoint": "audio",
-            "requests": 150,
-            "percentage": 12.0
-          }
-        ],
-        "byDay": [
-          {
-            "date": "2024-01-15",
-            "requests": 45
-          },
-          {
-            "date": "2024-01-14",
-            "requests": 38
-          }
-        ]
-      },
-      "rateLimit": {
-        "current": {
-          "requestsPerMinute": 15,
-          "requestsPerHour": 150,
-          "requestsPerDay": 1250
-        },
-        "limit": {
-          "requestsPerMinute": 150,
-          "requestsPerHour": 1500,
-          "requestsPerDay": 15000
-        }
+      "user": {
+        "requests": 1000,
+        "tokens": 20000
       }
-    }
-  }
+    },
+    "lastUsedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Kullanım istatistikleri başarıyla getirildi"
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+---
+
+### 7. getAvailableRoles()
+
+Kullanılabilir roller listesini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+const result = await apiKeys.getAvailableRoles();
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
-
-try {
-  // 1. API anahtarlarını listele
-  const apiKeys = await zapi.apiKeys.list({
-    limit: 10,
-    page: 1,
-    status: 'active'
-  });
-  console.log('Toplam anahtar:', apiKeys.data.pagination.totalItems);
-  
-  // 2. Yeni API anahtarı oluştur
-  const create = await zapi.apiKeys.create({
-    name: 'Development API Key',
-    permissions: ['read', 'write'],
-    rateLimit: {
-      requestsPerMinute: 50,
-      requestsPerHour: 500,
-      requestsPerDay: 5000
-    }
-  });
-  const keyId = create.data.apiKey.id;
-  console.log('Yeni anahtar oluşturuldu:', keyId);
-  
-  // 3. Anahtar detayını getir
-  const apiKey = await zapi.apiKeys.get(keyId);
-  console.log('Anahtar adı:', apiKey.data.apiKey.name);
-  console.log('Durum:', apiKey.data.apiKey.status);
-  
-  // 4. Anahtar güncelle
-  const update = await zapi.apiKeys.update(keyId, {
-    name: 'Updated Development API Key',
-    permissions: ['read', 'write', 'admin'],
-    rateLimit: {
-      requestsPerMinute: 100,
-      requestsPerHour: 1000,
-      requestsPerDay: 10000
-    }
-  });
-  console.log('Anahtar güncellendi:', update.data.apiKey.updatedAt);
-  
-  // 5. Anahtar aktif et
-  const activate = await zapi.apiKeys.activate(keyId);
-  console.log('Anahtar aktif edildi:', activate.data.apiKey.activatedAt);
-  
-  // 6. Anahtar kullanım bilgilerini getir
-  const usage = await zapi.apiKeys.getUsage(keyId);
-  console.log('Toplam istek:', usage.data.usage.summary.totalRequests);
-  console.log('Bugünkü istek:', usage.data.usage.summary.requestsToday);
-  
-  // 7. Anahtar yeniden oluştur
-  const regenerate = await zapi.apiKeys.regenerate(keyId);
-  console.log('Anahtar yeniden oluşturuldu:', regenerate.data.apiKey.regeneratedAt);
-  
-  // 8. Anahtar pasif et
-  const deactivate = await zapi.apiKeys.deactivate(keyId);
-  console.log('Anahtar pasif edildi:', deactivate.data.apiKey.deactivatedAt);
-  
-  // 9. Anahtar sil
-  const deleteKey = await zapi.apiKeys.delete(keyId);
-  console.log('Anahtar silindi:', deleteKey.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
+if (result.success) {
+  console.log('Kullanılabilir roller:', result.data);
+} else {
+  console.error('Rol listesi hatası:', result.error);
 }
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "roles": [
+      {
+        "id": "read",
+        "name": "Read Only",
+        "description": "Sadece okuma yetkisi",
+        "permissions": ["GET"]
+      },
+      {
+        "id": "write",
+        "name": "Read/Write",
+        "description": "Okuma ve yazma yetkisi",
+        "permissions": ["GET", "POST", "PUT", "PATCH"]
+      },
+      {
+        "id": "admin",
+        "name": "Admin",
+        "description": "Tam yetki",
+        "permissions": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+      }
+    ]
+  },
+  "message": "Kullanılabilir roller başarıyla getirildi"
+}
+```
+
+---
+
+### 8. rotate(keyId: string)
+
+API anahtarını yeniler
+
+**Parametreler:**
+- `keyId: string` - API anahtarı ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apiKeys.rotate("key_123");
+
+if (result.success) {
+  console.log('API anahtarı yenilendi:', result.data);
+  // Yeni API anahtarını güvenli bir yerde saklayın
+  const { key } = result.data;
+} else {
+  console.error('API anahtarı yenileme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "key_123",
+    "name": "Mobile App API Key",
+    "key": "zapi_live_new1234567890abcdef",
+    "oldKey": "zapi_live_1234567890abcdef",
+    "rotatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "API anahtarı başarıyla yenilendi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ROTATION_FAILED",
+    "message": "API anahtarı yenileme başarısız"
+  }
+}
+```
+
+---
+
+### 9. lookup(apiKey: string)
+
+API anahtarı bilgilerini sorgular
+
+**Parametreler:**
+- `apiKey: string` - API anahtarı
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await apiKeys.lookup("zapi_live_1234567890abcdef");
+
+if (result.success) {
+  console.log('API anahtarı bilgileri:', result.data);
+  const { name, roles, status, expiresAt } = result.data;
+} else {
+  console.error('API anahtarı sorgulama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "key_123",
+    "name": "Mobile App API Key",
+    "roles": ["read", "write"],
+    "status": "active",
+    "expiresAt": "2024-12-31T23:59:59Z",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastUsedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "API anahtarı bilgileri başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_API_KEY",
+    "message": "Geçersiz API anahtarı"
+  }
+}
+```
+
+---
+
+## API Anahtarı Tipleri
+
+| Tip | Açıklama | Örnek |
+|-----|----------|-------|
+| `live` | Canlı ortam anahtarı | `zapi_live_...` |
+| `test` | Test ortamı anahtarı | `zapi_test_...` |
+| `sandbox` | Sandbox anahtarı | `zapi_sandbox_...` |
+
+## API Anahtarı Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `active` | Aktif ve kullanılabilir |
+| `inactive` | Pasif, kullanılamaz |
+| `expired` | Süresi dolmuş |
+| `revoked` | İptal edilmiş |
+
+## Roller ve Yetkiler
+
+| Rol | Açıklama | Yetkiler |
+|-----|----------|----------|
+| `read` | Sadece okuma | GET |
+| `write` | Okuma ve yazma | GET, POST, PUT, PATCH |
+| `admin` | Tam yetki | GET, POST, PUT, PATCH, DELETE |
+| `webhook` | Webhook yetkisi | POST (sadece webhook) |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `API_KEY_NOT_FOUND` | API anahtarı bulunamadı |
+| `INVALID_API_KEY` | Geçersiz API anahtarı |
+| `API_KEY_EXPIRED` | API anahtarı süresi dolmuş |
+| `API_KEY_REVOKED` | API anahtarı iptal edilmiş |
+| `API_KEY_IN_USE` | API anahtarı kullanımda |
+| `ROTATION_FAILED` | API anahtarı yenileme başarısız |
+| `RATE_LIMIT_EXCEEDED` | Rate limit aşıldı |
+| `IP_NOT_ALLOWED` | IP adresi izin verilen listede değil |
+| `VALIDATION_ERROR` | Geçersiz parametreler |
+
+## Güvenlik Notları
+
+- API anahtarlarını güvenli bir yerde saklayın
+- API anahtarlarını kod içinde hardcode etmeyin
+- Düzenli olarak API anahtarlarını yenileyin
+- Kullanılmayan API anahtarlarını silin
+- IP kısıtlamaları kullanın
+- Rate limiting ayarlarını uygun şekilde yapın
+
+## Rate Limiting
+
+API anahtarları için rate limiting:
+
+```typescript
+// Rate limit ayarları
+await apiKeys.create({
+  name: "High Volume API Key",
+  rateLimit: {
+    requests: 10000,  // Saatte 10,000 istek
+    period: "hour"
+  }
+});
+```
+
+## IP Kısıtlamaları
+
+Belirli IP adreslerinden erişim:
+
+```typescript
+// IP kısıtlaması
+await apiKeys.create({
+  name: "Office API Key",
+  allowedIPs: [
+    "192.168.1.0/24",    // Ofis ağı
+    "10.0.0.0/8"         // VPN ağı
+  ]
+});
 ```

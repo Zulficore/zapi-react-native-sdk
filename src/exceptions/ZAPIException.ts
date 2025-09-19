@@ -22,10 +22,10 @@ import { ZAPIError } from '../types';
  */
 export class ZAPIException extends Error {
   public readonly responseData?: any;
-  public readonly httpStatusCode?: number;
-  public readonly errorCode?: string | number;
-  public readonly errorDetails?: any;
-  public readonly field?: string;
+  public readonly httpStatusCode: number | undefined;
+  public readonly errorCode: string | number | undefined;
+  public readonly errorDetails: any | undefined;
+  public readonly field: string | undefined;
 
   constructor(
     message: string = '',
@@ -80,15 +80,18 @@ export class ZAPIException extends Error {
    * Hata bilgilerini object olarak döndürür
    */
   toObject(): ZAPIError {
-    return {
+    const result: ZAPIError = {
       type: this.errorType,
       message: this.message,
       code: this.errorCode || 0,
-      httpStatusCode: this.httpStatusCode,
-      details: this.errorDetails,
-      field: this.field,
-      stack: this.stack,
     };
+    
+    if (this.httpStatusCode !== undefined) result.httpStatusCode = this.httpStatusCode;
+    if (this.errorDetails !== undefined) result.details = this.errorDetails;
+    if (this.field !== undefined) result.field = this.field;
+    if (this.stack !== undefined) result.stack = this.stack;
+    
+    return result;
   }
 
   /**
@@ -101,7 +104,7 @@ export class ZAPIException extends Error {
   /**
    * String representation
    */
-  toString(): string {
+  override toString(): string {
     return this.detailedMessage;
   }
 }

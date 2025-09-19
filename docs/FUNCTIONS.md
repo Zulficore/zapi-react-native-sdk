@@ -1,370 +1,469 @@
-# Functions Endpoint - 8 Metod
+# Functions Endpoint
 
-Fonksiyon yönetimi için kullanılan endpoint.
+Fonksiyon yönetimi endpoint'leri - Kullanıcı fonksiyonlarının oluşturulması, güncellenmesi, çalıştırılması ve yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const functions = zapi.functions;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-Fonksiyonları listeler.
+### 1. list(options: any)
+
+Fonksiyonları listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `search` (string): Arama terimi
-  - `appId` (string): Uygulama ID'si
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const functions = await zapi.functions.list({
+// Tüm fonksiyonları getir
+const result = await functions.list();
+
+// Filtreleme ile getir
+const result = await functions.list({
   limit: 10,
-  page: 1,
-  search: 'process',
-  appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
+  offset: 0,
+  status: "active"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Fonksiyonlar:', result.data);
+} else {
+  console.error('Fonksiyon listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Fonksiyonlar getirildi",
   "data": {
     "functions": [
       {
-        "id": "func_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "processData",
-        "description": "Process user data",
+        "id": "func_123",
+        "name": "Email Validator",
+        "description": "Email adresini doğrular",
         "status": "active",
-        "type": "javascript",
-        "code": "function processData(data) { return data; }",
-        "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-        "stats": {
-          "totalExecutions": 1250,
-          "lastExecution": "2024-01-15T10:30:00Z"
-        },
-        "createdAt": "2024-01-01T10:30:00Z",
+        "createdAt": "2024-01-15T10:30:00Z",
         "updatedAt": "2024-01-15T10:30:00Z"
       }
     ],
-    "pagination": {
-      "currentPage": 1,
-      "totalPages": 2,
-      "totalItems": 15,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
-    }
-  }
+    "total": 1,
+    "page": 1,
+    "limit": 10
+  },
+  "message": "Fonksiyonlar başarıyla listelendi"
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni fonksiyon oluşturur.
+---
+
+### 2. create(data: any)
+
+Yeni fonksiyon oluşturur
 
 **Parametreler:**
-- `data` (any): Fonksiyon verileri
-  - `name` (string): Fonksiyon adı
-  - `description` (string): Açıklama
-  - `type` (string): Fonksiyon tipi
-  - `code` (string): Fonksiyon kodu
+- `data: any` - Fonksiyon bilgileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.functions.create({
-  name: 'validateUser',
-  description: 'Validate user data',
-  type: 'javascript',
-  code: 'function validateUser(user) { return user.email && user.name; }'
+const result = await functions.create({
+  name: "Email Validator",
+  description: "Email adresini doğrular",
+  code: "function validateEmail(email) { return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email); }",
+  parameters: [
+    {
+      "name": "email",
+      "type": "string",
+      "required": true,
+      "description": "Doğrulanacak email adresi"
+    }
+  ]
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Fonksiyon başarıyla oluşturuldu",
-  "data": {
-    "function": {
-      "id": "func_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "validateUser",
-      "description": "Validate user data",
-      "status": "active",
-      "type": "javascript",
-      "code": "function validateUser(user) { return user.email && user.name; }",
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "stats": {
-        "totalExecutions": 0,
-        "lastExecution": null
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Fonksiyon oluşturuldu:', result.data);
+} else {
+  console.error('Fonksiyon oluşturma hatası:', result.error);
 }
-*/
 ```
 
-### 3. get(functionId: string): Promise<ApiResponse>
-Belirli bir fonksiyonun detaylarını getirir.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `functionId` (string): Fonksiyon ID'si
-
-**Detaylı Örnek:**
-```typescript
-const function = await zapi.functions.get('func_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Fonksiyon detayları getirildi",
   "data": {
-    "function": {
-      "id": "func_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "validateUser",
-      "description": "Validate user data",
-      "status": "active",
-      "type": "javascript",
-      "code": "function validateUser(user) { return user.email && user.name; }",
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "stats": {
-        "totalExecutions": 1250,
-        "lastExecution": "2024-01-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
+    "id": "func_123",
+    "name": "Email Validator",
+    "description": "Email adresini doğrular",
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Fonksiyon başarıyla oluşturuldu"
 }
-*/
 ```
 
-### 4. update(functionId: string, data: any): Promise<ApiResponse>
-Belirli bir fonksiyonu günceller.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Fonksiyon adı zaten kullanılıyor"
+  }
+}
+```
+
+---
+
+### 3. get(functionId: string)
+
+Belirli bir fonksiyonu getirir
 
 **Parametreler:**
-- `functionId` (string): Fonksiyon ID'si
-- `data` (any): Güncellenecek veriler
+- `functionId: string` - Fonksiyon ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const update = await zapi.functions.update('func_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'Updated Validate User',
-  description: 'Updated user validation function',
-  code: 'function validateUser(user) { return user.email && user.name && user.age > 18; }'
+const result = await functions.get("func_123");
+
+if (result.success) {
+  console.log('Fonksiyon detayı:', result.data);
+  const { name, description, code, parameters } = result.data;
+} else {
+  console.error('Fonksiyon getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "func_123",
+    "name": "Email Validator",
+    "description": "Email adresini doğrular",
+    "code": "function validateEmail(email) { return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email); }",
+    "parameters": [
+      {
+        "name": "email",
+        "type": "string",
+        "required": true,
+        "description": "Doğrulanacak email adresi"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Fonksiyon başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FUNCTION_NOT_FOUND",
+    "message": "Fonksiyon bulunamadı"
+  }
+}
+```
+
+---
+
+### 4. update(functionId: string, data: any)
+
+Fonksiyonu günceller
+
+**Parametreler:**
+- `functionId: string` - Fonksiyon ID'si
+- `data: any` - Güncellenecek bilgiler
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await functions.update("func_123", {
+  name: "Advanced Email Validator",
+  description: "Gelişmiş email doğrulama fonksiyonu",
+  code: "function validateEmail(email) { /* gelişmiş kod */ }"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Fonksiyon başarıyla güncellendi",
-  "data": {
-    "function": {
-      "id": "func_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Validate User",
-      "description": "Updated user validation function",
-      "status": "active",
-      "type": "javascript",
-      "code": "function validateUser(user) { return user.email && user.name && user.age > 18; }",
-      "appId": "app_64f8a1b2c3d4e5f6g7h8i9j0",
-      "stats": {
-        "totalExecutions": 1250,
-        "lastExecution": "2024-01-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:45:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Fonksiyon güncellendi:', result.data);
+} else {
+  console.error('Fonksiyon güncelleme hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(functionId: string): Promise<ApiResponse>
-Belirli bir fonksiyonu siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `functionId` (string): Fonksiyon ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteFunction = await zapi.functions.delete('func_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Fonksiyon başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "func_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Validate User",
-      "deletedAt": "2024-01-15T10:45:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+    "id": "func_123",
+    "name": "Advanced Email Validator",
+    "description": "Gelişmiş email doğrulama fonksiyonu",
+    "status": "active",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Fonksiyon başarıyla güncellendi"
 }
-*/
 ```
 
-### 6. execute(functionId: string, data: any = {}): Promise<ApiResponse>
-Fonksiyonu çalıştırır.
+---
+
+### 5. delete(functionId: string)
+
+Fonksiyonu siler
 
 **Parametreler:**
-- `functionId` (string): Fonksiyon ID'si
-- `data` (any): Çalıştırma verileri
+- `functionId: string` - Fonksiyon ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const execute = await zapi.functions.execute('func_64f8a1b2c3d4e5f6g7h8i9j0', {
-  user: {
-    email: 'test@example.com',
-    name: 'Test User',
-    age: 25
+const result = await functions.delete("func_123");
+
+if (result.success) {
+  console.log('Fonksiyon silindi');
+} else {
+  console.error('Fonksiyon silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Fonksiyon başarıyla silindi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FUNCTION_IN_USE",
+    "message": "Fonksiyon kullanımda olduğu için silinemiyor"
   }
+}
+```
+
+---
+
+### 6. execute(functionId: string, data: any)
+
+Fonksiyonu çalıştırır
+
+**Parametreler:**
+- `functionId: string` - Fonksiyon ID'si
+- `data: any` - Çalıştırma parametreleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await functions.execute("func_123", {
+  email: "user@example.com"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Fonksiyon sonucu:', result.data);
+  const { result: functionResult, executionTime } = result.data;
+} else {
+  console.error('Fonksiyon çalıştırma hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Fonksiyon başarıyla çalıştırıldı",
   "data": {
     "result": true,
-    "executionTime": "8ms",
-    "executedAt": "2024-01-15T10:45:00Z"
-  }
+    "executionTime": 15,
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Fonksiyon başarıyla çalıştırıldı"
 }
-*/
 ```
 
-### 7. toggleStatus(functionId: string): Promise<ApiResponse>
-Fonksiyon durumunu değiştirir.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FUNCTION_EXECUTION_ERROR",
+    "message": "Fonksiyon çalıştırılırken hata oluştu",
+    "details": {
+      "error": "ReferenceError: undefined variable"
+    }
+  }
+}
+```
+
+---
+
+### 7. toggleStatus(functionId: string)
+
+Fonksiyon durumunu değiştirir
 
 **Parametreler:**
-- `functionId` (string): Fonksiyon ID'si
+- `functionId: string` - Fonksiyon ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const toggle = await zapi.functions.toggleStatus('func_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await functions.toggleStatus("func_123");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Fonksiyon durumu değiştirildi:', result.data);
+  const { status } = result.data;
+} else {
+  console.error('Fonksiyon durum değiştirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Fonksiyon durumu değiştirildi",
   "data": {
-    "id": "func_64f8a1b2c3d4e5f6g7h8i9j0",
-    "isActive": false,
-    "toggledAt": "2024-01-15T10:45:00Z"
-  }
+    "id": "func_123",
+    "status": "inactive",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Fonksiyon durumu başarıyla değiştirildi"
 }
-*/
 ```
 
-### 8. test(functionId: string, data: any = {}): Promise<ApiResponse>
-Fonksiyonu test eder.
+---
+
+### 8. test(functionId: string, data: any)
+
+Fonksiyonu test eder
 
 **Parametreler:**
-- `functionId` (string): Fonksiyon ID'si
-- `data` (any): Test verileri
+- `functionId: string` - Fonksiyon ID'si
+- `data: any` - Test parametreleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const test = await zapi.functions.test('func_64f8a1b2c3d4e5f6g7h8i9j0', {
-  user: {
-    email: 'test@example.com',
-    name: 'Test User',
-    age: 25
-  }
+const result = await functions.test("func_123", {
+  email: "test@example.com"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Test sonucu:', result.data);
+  const { result: testResult, logs } = result.data;
+} else {
+  console.error('Fonksiyon test hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Fonksiyon test edildi",
   "data": {
     "result": true,
-    "executionTime": "5ms",
-    "testedAt": "2024-01-15T10:45:00Z"
+    "logs": [
+      "Fonksiyon başlatıldı",
+      "Email doğrulandı: test@example.com",
+      "Fonksiyon tamamlandı"
+    ],
+    "executionTime": 12,
+    "timestamp": "2024-01-15T10:30:00Z"
+  },
+  "message": "Fonksiyon testi başarıyla tamamlandı"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TEST_EXECUTION_ERROR",
+    "message": "Test çalıştırılırken hata oluştu",
+    "details": {
+      "error": "SyntaxError: Unexpected token",
+      "line": 5
+    }
   }
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+---
 
-```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+## Fonksiyon Parametreleri
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+Fonksiyon oluştururken kullanabileceğiniz parametre tipleri:
 
-try {
-  // 1. Fonksiyonları listele
-  const functions = await zapi.functions.list({
-    limit: 10,
-    page: 1,
-    appId: 'app_64f8a1b2c3d4e5f6g7h8i9j0'
-  });
-  console.log('Toplam fonksiyon:', functions.data.pagination.totalItems);
-  
-  // 2. Yeni fonksiyon oluştur
-  const create = await zapi.functions.create({
-    name: 'validateUser',
-    description: 'Validate user data',
-    type: 'javascript',
-    code: 'function validateUser(user) { return user.email && user.name && user.age > 18; }'
-  });
-  const functionId = create.data.function.id;
-  console.log('Yeni fonksiyon oluşturuldu:', functionId);
-  
-  // 3. Fonksiyon detayını getir
-  const function = await zapi.functions.get(functionId);
-  console.log('Fonksiyon adı:', function.data.function.name);
-  console.log('Aktif mi:', function.data.function.isActive);
-  
-  // 4. Fonksiyon güncelle
-  const update = await zapi.functions.update(functionId, {
-    name: 'Updated Validate User',
-    description: 'Updated user validation function'
-  });
-  console.log('Fonksiyon güncellendi:', update.data.function.updatedAt);
-  
-  // 5. Fonksiyonu test et
-  const test = await zapi.functions.test(functionId, {
-    user: {
-      email: 'test@example.com',
-      name: 'Test User',
-      age: 25
-    }
-  });
-  console.log('Test sonucu:', test.data.result);
-  console.log('Test süresi:', test.data.executionTime);
-  
-  // 6. Fonksiyonu çalıştır
-  const execute = await zapi.functions.execute(functionId, {
-    user: {
-      email: 'jane@example.com',
-      name: 'Jane Doe',
-      age: 22
-    }
-  });
-  console.log('Çalıştırma sonucu:', execute.data.result);
-  console.log('Çalıştırma süresi:', execute.data.executionTime);
-  
-  // 7. Fonksiyon durumunu değiştir
-  const toggle = await zapi.functions.toggleStatus(functionId);
-  console.log('Yeni durum:', toggle.data.isActive);
-  
-  // 8. Fonksiyon sil
-  const deleteFunction = await zapi.functions.delete(functionId);
-  console.log('Fonksiyon silindi:', deleteFunction.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
-```
+| Tip | Açıklama | Örnek |
+|-----|----------|-------|
+| `string` | Metin değeri | `"hello world"` |
+| `number` | Sayısal değer | `42` |
+| `boolean` | Doğru/yanlış | `true` |
+| `object` | Nesne | `{"key": "value"}` |
+| `array` | Dizi | `[1, 2, 3]` |
+
+## Fonksiyon Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `active` | Fonksiyon aktif ve çalışır durumda |
+| `inactive` | Fonksiyon pasif, çalıştırılamaz |
+| `draft` | Fonksiyon taslak halinde |
+| `error` | Fonksiyonda hata var |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `FUNCTION_NOT_FOUND` | Fonksiyon bulunamadı |
+| `VALIDATION_ERROR` | Geçersiz parametreler |
+| `FUNCTION_IN_USE` | Fonksiyon kullanımda |
+| `FUNCTION_EXECUTION_ERROR` | Fonksiyon çalıştırma hatası |
+| `TEST_EXECUTION_ERROR` | Test çalıştırma hatası |
+| `SYNTAX_ERROR` | Kod sözdizimi hatası |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- Fonksiyon kodları güvenli bir sandbox ortamında çalıştırılır
+- Sistem fonksiyonlarına erişim kısıtlıdır
+- Fonksiyon çalıştırma süresi sınırlıdır (30 saniye)
+- Test modunda fonksiyonlar gerçek verileri etkilemez

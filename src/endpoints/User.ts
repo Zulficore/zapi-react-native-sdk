@@ -1,6 +1,7 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, User, ListOptions, PaginatedResponse, ValidationException } from '../types';
+import { ApiResponse } from '../types';
+import { ValidationException } from '../exceptions';
 
 /**
  * User - Kullanıcı yönetimi endpoint'leri
@@ -44,7 +45,6 @@ export class User extends BaseEndpoint {
       throw new ValidationException('Avatar dosya yolu boş olamaz');
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     // React Native'de mime type kontrolü farklı olabilir
     // Burada basit dosya uzantısı kontrolü yapıyoruz
     const extension = filePath.split('.').pop()?.toLowerCase();
@@ -54,7 +54,7 @@ export class User extends BaseEndpoint {
       throw new ValidationException('Desteklenmeyen dosya formatı: ' + extension);
     }
 
-    return this.getHttpClient().postMultipart('/user/avatar', {}, { avatar: filePath });
+    return this.getHttpClient().postMultipart('/user/avatar', {}, { avatar: { uri: filePath, type: 'image/jpeg', name: 'avatar' } });
   }
 
   /**

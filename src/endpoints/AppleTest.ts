@@ -1,6 +1,6 @@
 import { BaseEndpoint } from './BaseEndpoint';
-import { ApiResponse } from '../types/ApiResponse';
-import { ValidationException } from '../exceptions/ValidationException';
+import { ZAPI } from '../ZAPI';
+import { ApiResponse } from '../types';
 
 /**
  * AppleTest Endpoint
@@ -8,6 +8,9 @@ import { ValidationException } from '../exceptions/ValidationException';
  * Bu sınıf Apple test işlemlerini yönetir.
  */
 export class AppleTest extends BaseEndpoint {
+  constructor(zapi: ZAPI) {
+    super(zapi);
+  }
   /**
    * Apple test sayfasını getirir
    * 

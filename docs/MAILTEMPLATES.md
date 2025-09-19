@@ -1,417 +1,452 @@
-# MailTemplates Endpoint - 7 Metod
+# MailTemplates Endpoint
 
-E-posta şablonu yönetimi için kullanılan endpoint.
+Email şablonları endpoint'i - Email şablonlarını yönetir.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const mailTemplates = zapi.mailTemplates;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-E-posta şablonlarını listeler.
+### 1. list(options: any)
+
+Email şablonlarını listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `status` (string): Şablon durumu
-  - `type` (string): Şablon tipi
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const templates = await zapi.mailTemplates.list({
-  limit: 10,
-  page: 1,
-  status: 'active',
-  type: 'welcome'
-});
+// Tüm email şablonlarını listele
+const result = await mailTemplates.list();
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Email şablonları:', result.data);
+  result.data.templates.forEach(template => {
+    console.log(`${template.name} - ${template.type} - ${template.status}`);
+  });
+} else {
+  console.error('Email şablonları listeleme hatası:', result.error);
+}
+
+// Filtreleme seçenekleri ile listele
+const filtered = await mailTemplates.list({
+  type: 'welcome',
+  status: 'active',
+  page: 1,
+  limit: 10,
+  search: 'welcome'
+});
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "E-posta şablonları getirildi",
   "data": {
     "templates": [
       {
-        "id": "template_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "Welcome Email",
+        "id": "template_123",
+        "name": "Hoş Geldin Emaili",
         "type": "welcome",
         "status": "active",
-        "subject": "ZAPI'ya Hoş Geldiniz",
-        "content": "Merhaba {{name}}, ZAPI'ya hoş geldiniz!",
-        "variables": ["name", "email", "appName"],
-        "language": "tr",
-        "metadata": {
-          "category": "welcome",
-          "tags": ["welcome", "email", "user"]
-        },
-        "usage": {
-          "count": 1250,
-          "lastUsed": "2024-01-15T10:40:00Z"
-        },
-        "createdAt": "2024-01-01T10:30:00Z",
+        "subject": "{{app_name}}'e Hoş Geldiniz!",
+        "preview": "Merhaba {{user_name}}, hoş geldiniz...",
+        "variables": ["user_name", "app_name", "login_url"],
+        "createdAt": "2024-01-01T00:00:00Z",
         "updatedAt": "2024-01-15T10:30:00Z"
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 3,
-      "totalItems": 25,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "pages": 1
     }
   }
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni e-posta şablonu oluşturur.
+---
+
+### 2. create(data: any)
+
+Yeni email şablonu oluşturur
 
 **Parametreler:**
-- `data` (any): Şablon verileri
-  - `name` (string): Şablon adı
-  - `type` (string): Şablon tipi
-  - `subject` (string): E-posta konusu
-  - `content` (string): E-posta içeriği
-  - `variables` (string[]): Değişken listesi
+- `data: any` - Şablon verisi
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.mailTemplates.create({
-  name: 'Password Reset Email',
-  type: 'password_reset',
-  subject: 'Şifre Sıfırlama',
-  content: 'Merhaba {{name}}, şifrenizi sıfırlamak için bu linke tıklayın: {{resetLink}}',
-  variables: ['name', 'resetLink', 'expiryTime'],
-  language: 'tr',
-  metadata: {
-    category: 'security',
-    tags: ['password', 'reset', 'security']
-  }
+const result = await mailTemplates.create({
+  name: "Şifre Sıfırlama",
+  type: "password_reset",
+  subject: "{{app_name}} - Şifre Sıfırlama",
+  html: `
+    <h1>Şifre Sıfırlama</h1>
+    <p>Merhaba {{user_name}},</p>
+    <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>
+    <a href="{{reset_url}}">Şifreyi Sıfırla</a>
+    <p>Bu link 24 saat geçerlidir.</p>
+  `,
+  text: "Merhaba {{user_name}}, şifrenizi sıfırlamak için: {{reset_url}}",
+  variables: ["user_name", "app_name", "reset_url"],
+  status: "active"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "E-posta şablonu başarıyla oluşturuldu",
-  "data": {
-    "template": {
-      "id": "template_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Password Reset Email",
-      "type": "password_reset",
-      "status": "active",
-      "subject": "Şifre Sıfırlama",
-      "content": "Merhaba {{name}}, şifrenizi sıfırlamak için bu linke tıklayın: {{resetLink}}",
-      "variables": ["name", "resetLink", "expiryTime"],
-      "language": "tr",
-      "metadata": {
-        "category": "security",
-        "tags": ["password", "reset", "security"]
-      },
-      "usage": {
-        "count": 0,
-        "lastUsed": null
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Email şablonu oluşturuldu:', result.data);
+} else {
+  console.error('Email şablonu oluşturma hatası:', result.error);
 }
-*/
 ```
 
-### 3. get(templateId: string): Promise<ApiResponse>
-Belirli bir şablonun detaylarını getirir.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `templateId` (string): Şablon ID'si
-
-**Detaylı Örnek:**
-```typescript
-const template = await zapi.mailTemplates.get('template_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "E-posta şablonu detayları getirildi",
   "data": {
-    "template": {
-      "id": "template_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Welcome Email",
-      "type": "welcome",
-      "status": "active",
-      "subject": "ZAPI'ya Hoş Geldiniz",
-      "content": "Merhaba {{name}}, ZAPI'ya hoş geldiniz!",
-      "variables": ["name", "email", "appName"],
-      "language": "tr",
-      "metadata": {
-        "category": "welcome",
-        "tags": ["welcome", "email", "user"]
-      },
-      "usage": {
-        "count": 1250,
-        "lastUsed": "2024-01-15T10:40:00Z"
-      },
-      "preview": {
-        "subject": "ZAPI'ya Hoş Geldiniz",
-        "content": "Merhaba John Doe, ZAPI'ya hoş geldiniz!"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
+    "id": "template_456",
+    "name": "Şifre Sıfırlama",
+    "type": "password_reset",
+    "status": "active",
+    "subject": "{{app_name}} - Şifre Sıfırlama",
+    "html": "<h1>Şifre Sıfırlama</h1>...",
+    "text": "Merhaba {{user_name}}, şifrenizi sıfırlamak için: {{reset_url}}",
+    "variables": ["user_name", "app_name", "reset_url"],
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
-*/
 ```
 
-### 4. update(templateId: string, data: any): Promise<ApiResponse>
-Belirli bir şablonu günceller.
+---
+
+### 3. get(templateId: string)
+
+Email şablonu detaylarını getirir
 
 **Parametreler:**
-- `templateId` (string): Şablon ID'si
-- `data` (any): Güncellenecek veriler
+- `templateId: string` - Şablon ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const update = await zapi.mailTemplates.update('template_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'Updated Welcome Email',
-  subject: 'ZAPI'ya Hoş Geldiniz - Güncellenmiş',
-  content: 'Merhaba {{name}}, ZAPI'ya hoş geldiniz! Hesabınız başarıyla oluşturuldu.',
-  variables: ['name', 'email', 'appName', 'loginUrl']
+const result = await mailTemplates.get('template_123');
+
+if (result.success) {
+  console.log('Email şablonu:', result.data);
+  console.log('HTML içeriği:', result.data.html);
+  console.log('Değişkenler:', result.data.variables);
+} else {
+  console.error('Email şablonu getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "template_123",
+    "name": "Hoş Geldin Emaili",
+    "type": "welcome",
+    "status": "active",
+    "subject": "{{app_name}}'e Hoş Geldiniz!",
+    "html": "<h1>Hoş Geldiniz!</h1>...",
+    "text": "Merhaba {{user_name}}, hoş geldiniz...",
+    "variables": ["user_name", "app_name", "login_url"],
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 4. update(templateId: string, data: any)
+
+Email şablonunu günceller
+
+**Parametreler:**
+- `templateId: string` - Şablon ID'si
+- `data: any` - Güncellenecek veri
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await mailTemplates.update('template_123', {
+  name: "Güncellenmiş Hoş Geldin",
+  subject: "{{app_name}}'e Hoş Geldiniz - Yeni Özellikler!",
+  html: `
+    <h1>Hoş Geldiniz!</h1>
+    <p>Merhaba {{user_name}},</p>
+    <p>{{app_name}}'e hoş geldiniz! Yeni özelliklerimizi keşfedin:</p>
+    <ul>
+      <li>Gelişmiş güvenlik</li>
+      <li>Hızlı performans</li>
+    </ul>
+    <a href="{{login_url}}">Hemen Başla</a>
+  `
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "E-posta şablonu başarıyla güncellendi",
-  "data": {
-    "template": {
-      "id": "template_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Updated Welcome Email",
-      "type": "welcome",
-      "status": "active",
-      "subject": "ZAPI'ya Hoş Geldiniz - Güncellenmiş",
-      "content": "Merhaba {{name}}, ZAPI'ya hoş geldiniz! Hesabınız başarıyla oluşturuldu.",
-      "variables": ["name", "email", "appName", "loginUrl"],
-      "language": "tr",
-      "metadata": {
-        "category": "welcome",
-        "tags": ["welcome", "email", "user"]
-      },
-      "usage": {
-        "count": 1250,
-        "lastUsed": "2024-01-15T10:40:00Z"
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:45:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Email şablonu güncellendi:', result.data);
+} else {
+  console.error('Email şablonu güncelleme hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(templateId: string): Promise<ApiResponse>
-Belirli bir şablonu siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `templateId` (string): Şablon ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteTemplate = await zapi.mailTemplates.delete('template_64f8a1b2c3d4e5f6g7h8i9j1');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "E-posta şablonu başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "template_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Password Reset Email",
-      "deletedAt": "2024-01-15T10:45:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
+    "id": "template_123",
+    "name": "Güncellenmiş Hoş Geldin",
+    "type": "welcome",
+    "status": "active",
+    "subject": "{{app_name}}'e Hoş Geldiniz - Yeni Özellikler!",
+    "html": "<h1>Hoş Geldiniz!</h1>...",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
-*/
 ```
 
-### 6. preview(templateId: string, variables: any = {}): Promise<ApiResponse>
-Şablon önizlemesi yapar.
+---
+
+### 5. delete(templateId: string)
+
+Email şablonunu siler
 
 **Parametreler:**
-- `templateId` (string): Şablon ID'si
-- `variables` (any): Değişken değerleri
+- `templateId: string` - Şablon ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const preview = await zapi.mailTemplates.preview('template_64f8a1b2c3d4e5f6g7h8i9j0', {
-  name: 'John Doe',
-  email: 'john@example.com',
-  appName: 'ZAPI'
+const result = await mailTemplates.delete('template_123');
+
+if (result.success) {
+  console.log('Email şablonu silindi:', result.data);
+} else {
+  console.error('Email şablonu silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "template_123",
+    "deletedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 6. preview(templateId: string, variables: any)
+
+Email şablonunun önizlemesini oluşturur
+
+**Parametreler:**
+- `templateId: string` - Şablon ID'si
+- `variables: any` - Önizleme için değişkenler
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await mailTemplates.preview('template_123', {
+  user_name: "Ahmet Yılmaz",
+  app_name: "ZAPI Platform",
+  login_url: "https://app.zapi.com/login"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Email önizlemesi:', result.data);
+  console.log('HTML önizlemesi:', result.data.html);
+  console.log('Text önizlemesi:', result.data.text);
+} else {
+  console.error('Email önizleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Şablon önizlemesi oluşturuldu",
   "data": {
-    "preview": {
-      "templateId": "template_64f8a1b2c3d4e5f6g7h8i9j0",
-      "subject": "ZAPI'ya Hoş Geldiniz - Güncellenmiş",
-      "content": "Merhaba John Doe, ZAPI'ya hoş geldiniz! Hesabınız başarıyla oluşturuldu.",
-      "variables": {
-        "name": "John Doe",
-        "email": "john@example.com",
-        "appName": "ZAPI"
-      },
-      "renderedAt": "2024-01-15T10:45:00Z"
+    "templateId": "template_123",
+    "subject": "ZAPI Platform'e Hoş Geldiniz!",
+    "html": "<h1>Hoş Geldiniz!</h1><p>Merhaba Ahmet Yılmaz,</p>...",
+    "text": "Merhaba Ahmet Yılmaz, ZAPI Platform'e hoş geldiniz...",
+    "variables": {
+      "user_name": "Ahmet Yılmaz",
+      "app_name": "ZAPI Platform",
+      "login_url": "https://app.zapi.com/login"
     }
   }
 }
-*/
 ```
 
-### 7. getStats(options: any = {}): Promise<ApiResponse>
-Şablon istatistiklerini getirir.
+---
+
+### 7. clone(templateId: string, data: any)
+
+Email şablonunu kopyalar
 
 **Parametreler:**
-- `options` (any): İstatistik seçenekleri
-  - `period` (string): İstatistik periyodu
-  - `dateFrom` (string): Başlangıç tarihi
-  - `dateTo` (string): Bitiş tarihi
+- `templateId: string` - Kopyalanacak şablon ID'si
+- `data: any` - Yeni şablon için ek veriler
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const stats = await zapi.mailTemplates.getStats({
-  period: 'monthly',
-  dateFrom: '2024-01-01',
-  dateTo: '2024-01-31'
+const result = await mailTemplates.clone('template_123', {
+  name: "Hoş Geldin Emaili - V2",
+  type: "welcome_v2",
+  status: "draft"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Şablon istatistikleri getirildi",
-  "data": {
-    "stats": {
-      "period": "monthly",
-      "dateRange": {
-        "from": "2024-01-01",
-        "to": "2024-01-31"
-      },
-      "overview": {
-        "totalTemplates": 25,
-        "activeTemplates": 20,
-        "inactiveTemplates": 5,
-        "totalUsage": 12500,
-        "averageUsage": 500
-      },
-      "breakdown": {
-        "byType": [
-          {
-            "type": "welcome",
-            "count": 5,
-            "usage": 5000
-          },
-          {
-            "type": "password_reset",
-            "count": 3,
-            "usage": 3000
-          }
-        ],
-        "byLanguage": [
-          {
-            "language": "tr",
-            "count": 15,
-            "usage": 8000
-          },
-          {
-            "language": "en",
-            "count": 10,
-            "usage": 4500
-          }
-        ]
-      },
-      "topTemplates": [
-        {
-          "id": "template_64f8a1b2c3d4e5f6g7h8i9j0",
-          "name": "Welcome Email",
-          "usage": 1250
-        }
-      ]
-    }
-  }
+if (result.success) {
+  console.log('Email şablonu kopyalandı:', result.data);
+} else {
+  console.error('Email şablonu kopyalama hatası:', result.error);
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "template_789",
+    "name": "Hoş Geldin Emaili - V2",
+    "type": "welcome_v2",
+    "status": "draft",
+    "subject": "{{app_name}}'e Hoş Geldiniz!",
+    "html": "<h1>Hoş Geldiniz!</h1>...",
+    "text": "Merhaba {{user_name}}, hoş geldiniz...",
+    "variables": ["user_name", "app_name", "login_url"],
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+## Email Şablon Türleri
+
+| Tür | Açıklama |
+|-----|----------|
+| `welcome` | Hoş geldin emaili |
+| `password_reset` | Şifre sıfırlama |
+| `email_verification` | Email doğrulama |
+| `notification` | Bildirim emaili |
+| `marketing` | Pazarlama emaili |
+| `invoice` | Fatura emaili |
+| `receipt` | Makbuz emaili |
+
+## Şablon Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `active` | Aktif şablon |
+| `draft` | Taslak şablon |
+| `archived` | Arşivlenmiş şablon |
+| `disabled` | Devre dışı şablon |
+
+## Değişkenler
+
+### Sistem Değişkenleri
+- `{{app_name}}` - Uygulama adı
+- `{{app_url}}` - Uygulama URL'i
+- `{{support_email}}` - Destek emaili
+- `{{current_year}}` - Mevcut yıl
+
+### Kullanıcı Değişkenleri
+- `{{user_name}}` - Kullanıcı adı
+- `{{user_email}}` - Kullanıcı emaili
+- `{{user_id}}` - Kullanıcı ID'si
+
+### Özel Değişkenler
+- `{{reset_url}}` - Şifre sıfırlama linki
+- `{{verification_url}}` - Email doğrulama linki
+- `{{login_url}}` - Giriş linki
+- `{{unsubscribe_url}}` - Abonelik iptal linki
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `TEMPLATE_NOT_FOUND` | Şablon bulunamadı |
+| `TEMPLATE_CREATE_FAILED` | Şablon oluşturulamadı |
+| `TEMPLATE_UPDATE_FAILED` | Şablon güncellenemedi |
+| `TEMPLATE_DELETE_FAILED` | Şablon silinemedi |
+| `INVALID_TEMPLATE_DATA` | Geçersiz şablon verisi |
+| `TEMPLATE_VARIABLES_MISSING` | Şablon değişkenleri eksik |
+
+## Güvenlik Notları
+
+- Email şablonları hassas bilgiler içerebilir
+- Sadece yetkili kullanıcılar erişebilir
+- Şablon değişikliklerini loglayın
+- HTML içeriğini güvenli hale getirin
+
+## Email Şablon Yönetimi
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+// Şablonları listele
+const templates = await mailTemplates.list();
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+// Yeni şablon oluştur
+const newTemplate = await mailTemplates.create({
+  name: "Yeni Şablon",
+  type: "notification",
+  subject: "Bildirim",
+  html: "<h1>Bildirim</h1>"
+});
 
-try {
-  // 1. Şablonları listele
-  const templates = await zapi.mailTemplates.list({ limit: 10, status: 'active' });
-  console.log('Toplam şablon:', templates.data.pagination.totalItems);
-  
-  // 2. Yeni şablon oluştur
-  const create = await zapi.mailTemplates.create({
-    name: 'Password Reset Email',
-    type: 'password_reset',
-    subject: 'Şifre Sıfırlama',
-    content: 'Merhaba {{name}}, şifrenizi sıfırlamak için bu linke tıklayın: {{resetLink}}',
-    variables: ['name', 'resetLink', 'expiryTime'],
-    language: 'tr'
-  });
-  const templateId = create.data.template.id;
-  console.log('Yeni şablon oluşturuldu:', templateId);
-  
-  // 3. Şablon detayını getir
-  const template = await zapi.mailTemplates.get(templateId);
-  console.log('Şablon konusu:', template.data.template.subject);
-  
-  // 4. Şablon güncelle
-  const update = await zapi.mailTemplates.update(templateId, {
-    name: 'Updated Password Reset Email',
-    subject: 'Şifre Sıfırlama - Güncellenmiş',
-    content: 'Merhaba {{name}}, şifrenizi sıfırlamak için bu linke tıklayın: {{resetLink}}. Link {{expiryTime}} sonra geçersiz olacak.'
-  });
-  console.log('Şablon güncellendi:', update.data.template.updatedAt);
-  
-  // 5. Şablon önizlemesi
-  const preview = await zapi.mailTemplates.preview(templateId, {
-    name: 'John Doe',
-    resetLink: 'https://app.zapi.com/reset-password?token=abc123',
-    expiryTime: '24 saat'
-  });
-  console.log('Önizleme:', preview.data.preview.content);
-  
-  // 6. İstatistikleri getir
-  const stats = await zapi.mailTemplates.getStats({
-    period: 'monthly',
-    dateFrom: '2024-01-01',
-    dateTo: '2024-01-31'
-  });
-  console.log('Toplam şablon:', stats.data.stats.overview.totalTemplates);
-  console.log('Toplam kullanım:', stats.data.stats.overview.totalUsage);
-  
-  // 7. Şablon sil
-  const deleteTemplate = await zapi.mailTemplates.delete(templateId);
-  console.log('Şablon silindi:', deleteTemplate.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
+// Şablonu getir
+const template = await mailTemplates.get('template_123');
+
+// Şablonu güncelle
+await mailTemplates.update('template_123', {
+  subject: "Güncellenmiş Konu"
+});
+
+// Şablon önizlemesi
+const preview = await mailTemplates.preview('template_123', {
+  user_name: "Test Kullanıcı"
+});
+
+// Şablonu kopyala
+const cloned = await mailTemplates.clone('template_123', {
+  name: "Kopya Şablon"
+});
+
+// Şablonu sil
+await mailTemplates.delete('template_123');
 ```

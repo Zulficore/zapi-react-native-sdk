@@ -1,6 +1,6 @@
 import { BaseEndpoint } from './BaseEndpoint';
 import { ZAPI } from '../ZAPI';
-import { ApiResponse, SystemConfig } from '../types';
+import { ApiResponse } from '../types';
 
 /**
  * Config - Konfigürasyon endpoint'leri

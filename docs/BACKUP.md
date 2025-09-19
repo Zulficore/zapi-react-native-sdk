@@ -1,291 +1,556 @@
-# Backup Endpoint - 4 Metod
+# Backup Endpoint
 
-Yedekleme yönetimi için kullanılan endpoint.
+Yedekleme yönetimi endpoint'leri - Yedek listesi, detayları, silme ve kayıt yedekleri.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const backup = zapi.backup;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-Yedekleri listeler.
+### 1. list(options: any)
+
+Yedekleri listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `type` (string): Yedek tipi
-  - `status` (string): Yedek durumu
+- `options: any` - Listeleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const backups = await zapi.backup.list({
-  limit: 10,
+const result = await backup.list({
   page: 1,
-  type: 'full',
-  status: 'completed'
+  limit: 20,
+  type: "full",
+  status: "completed",
+  sortBy: "createdAt",
+  sortOrder: "desc"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Yedekler:', result.data);
+  result.data.backups.forEach(backup => {
+    console.log(`- ${backup.name} (${backup.type}) - ${backup.size}`);
+  });
+} else {
+  console.error('Yedek listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Yedekler getirildi",
   "data": {
     "backups": [
       {
-        "id": "backup_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "Daily Backup 2024-01-15",
+        "id": "backup_123",
+        "name": "Daily Backup - 2024-01-15",
         "type": "full",
         "status": "completed",
-        "size": "2.5GB",
-        "location": "s3://zapi-backups/daily/2024-01-15/",
-        "metadata": {
-          "database": true,
-          "files": true,
-          "config": true,
-          "tables": 25,
-          "records": 125000
+        "size": {
+          "bytes": 1073741824,
+          "human": "1.0 GB"
         },
-        "schedule": {
-          "type": "daily",
-          "time": "02:00",
-          "timezone": "UTC"
+        "createdAt": "2024-01-15T10:30:00Z",
+        "completedAt": "2024-01-15T10:45:00Z",
+        "duration": 900,
+        "tables": [
+          "users",
+          "apps",
+          "subscriptions",
+          "logs"
+        ],
+        "recordCount": 15000,
+        "compression": "gzip",
+        "encryption": "AES-256",
+        "storage": {
+          "provider": "aws-s3",
+          "bucket": "zapi-backups",
+          "region": "us-east-1"
+        }
+      },
+      {
+        "id": "backup_456",
+        "name": "Incremental Backup - 2024-01-15",
+        "type": "incremental",
+        "status": "completed",
+        "size": {
+          "bytes": 134217728,
+          "human": "128 MB"
         },
-        "retention": {
-          "days": 30,
-          "expiresAt": "2024-02-14T02:00:00Z"
-        },
-        "createdAt": "2024-01-15T02:00:00Z",
-        "completedAt": "2024-01-15T02:15:00Z",
-        "createdBy": "system"
+        "createdAt": "2024-01-15T14:30:00Z",
+        "completedAt": "2024-01-15T14:35:00Z",
+        "duration": 300,
+        "tables": [
+          "users",
+          "logs"
+        ],
+        "recordCount": 500,
+        "compression": "gzip",
+        "encryption": "AES-256",
+        "storage": {
+          "provider": "aws-s3",
+          "bucket": "zapi-backups",
+          "region": "us-east-1"
+        }
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalItems": 45,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
+      "page": 1,
+      "limit": 20,
+      "total": 45,
+      "pages": 3
+    },
+    "summary": {
+      "totalBackups": 45,
+      "completedBackups": 42,
+      "failedBackups": 3,
+      "totalSize": "25.5 GB",
+      "lastBackup": "2024-01-15T14:35:00Z"
     }
-  }
-}
-*/
-```
-
-### 2. create(data: any): Promise<ApiResponse>
-Yeni yedek oluşturur.
-
-**Parametreler:**
-- `data` (any): Yedek verileri
-  - `name` (string): Yedek adı
-  - `type` (string): Yedek tipi
-  - `include` (any): Dahil edilecek veriler
-  - `schedule` (any): Zamanlama bilgileri
-
-**Detaylı Örnek:**
-```typescript
-const create = await zapi.backup.create({
-  name: 'Manual Backup 2024-01-15',
-  type: 'full',
-  include: {
-    database: true,
-    files: true,
-    config: true,
-    tables: ['users', 'apps', 'subscriptions']
   },
-  schedule: {
-    type: 'manual',
-    time: 'now'
-  }
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yedek başarıyla oluşturuldu",
-  "data": {
-    "backup": {
-      "id": "backup_64f8a1b2c3d4e5f6g7h8i9j1",
-      "name": "Manual Backup 2024-01-15",
-      "type": "full",
-      "status": "in_progress",
-      "size": null,
-      "location": null,
-      "metadata": {
-        "database": true,
-        "files": true,
-        "config": true,
-        "tables": ["users", "apps", "subscriptions"]
-      },
-      "schedule": {
-        "type": "manual",
-        "time": "now"
-      },
-      "retention": {
-        "days": 30,
-        "expiresAt": "2024-02-14T10:40:00Z"
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "completedAt": null,
-      "createdBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+  "message": "Yedekler başarıyla listelendi"
 }
-*/
 ```
 
-### 3. get(backupId: string): Promise<ApiResponse>
-Belirli bir yedeğin detaylarını getirir.
+---
+
+### 2. get(backupId: string)
+
+Belirli bir yedeği getirir
 
 **Parametreler:**
-- `backupId` (string): Yedek ID'si
+- `backupId: string` - Yedek ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const backup = await zapi.backup.get('backup_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await backup.get("backup_123");
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Yedek detayları:', result.data);
+  const { name, type, status, size, tables } = result.data;
+} else {
+  console.error('Yedek getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Yedek detayları getirildi",
   "data": {
-    "backup": {
-      "id": "backup_64f8a1b2c3d4e5f6g7h8i9j0",
-      "name": "Daily Backup 2024-01-15",
-      "type": "full",
-      "status": "completed",
-      "size": "2.5GB",
-      "location": "s3://zapi-backups/daily/2024-01-15/",
-      "metadata": {
-        "database": true,
-        "files": true,
-        "config": true,
-        "tables": 25,
-        "records": 125000
-      },
-      "schedule": {
-        "type": "daily",
-        "time": "02:00",
-        "timezone": "UTC"
-      },
-      "retention": {
-        "days": 30,
-        "expiresAt": "2024-02-14T02:00:00Z"
-      },
-      "files": [
-        {
-          "name": "database.sql",
-          "size": "1.8GB",
-          "type": "sql"
-        },
-        {
-          "name": "files.tar.gz",
-          "size": "700MB",
-          "type": "archive"
+    "id": "backup_123",
+    "name": "Daily Backup - 2024-01-15",
+    "type": "full",
+    "status": "completed",
+    "size": {
+      "bytes": 1073741824,
+      "human": "1.0 GB"
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "completedAt": "2024-01-15T10:45:00Z",
+    "duration": 900,
+    "tables": [
+      {
+        "name": "users",
+        "recordCount": 5000,
+        "size": {
+          "bytes": 268435456,
+          "human": "256 MB"
         }
-      ],
-      "createdAt": "2024-01-15T02:00:00Z",
-      "completedAt": "2024-01-15T02:15:00Z",
+      },
+      {
+        "name": "apps",
+        "recordCount": 1000,
+        "size": {
+          "bytes": 134217728,
+          "human": "128 MB"
+        }
+      },
+      {
+        "name": "subscriptions",
+        "recordCount": 8000,
+        "size": {
+          "bytes": 536870912,
+          "human": "512 MB"
+        }
+      },
+      {
+        "name": "logs",
+        "recordCount": 1000,
+        "size": {
+          "bytes": 134217728,
+          "human": "128 MB"
+        }
+      }
+    ],
+    "recordCount": 15000,
+    "compression": "gzip",
+    "encryption": "AES-256",
+    "storage": {
+      "provider": "aws-s3",
+      "bucket": "zapi-backups",
+      "region": "us-east-1",
+      "path": "backups/2024/01/15/backup_123.tar.gz"
+    },
+    "metadata": {
+      "databaseVersion": "8.0.35",
+      "backupVersion": "1.2.3",
+      "checksum": "sha256:abc123def456...",
       "createdBy": "system"
+    },
+    "restore": {
+      "available": true,
+      "estimatedTime": "15-20 minutes",
+      "requirements": {
+        "diskSpace": "2.0 GB",
+        "databaseVersion": "8.0.35+"
+      }
     }
-  }
+  },
+  "message": "Yedek başarıyla getirildi"
 }
-*/
 ```
 
-### 4. restore(backupId: string, options: any = {}): Promise<ApiResponse>
-Yedekten geri yükleme yapar.
+---
+
+### 3. delete(backupId: string)
+
+Yedeği siler
 
 **Parametreler:**
-- `backupId` (string): Yedek ID'si
-- `options` (any): Geri yükleme seçenekleri
-  - `target` (string): Hedef ortam
-  - `include` (any): Geri yüklenecek veriler
-  - `confirm` (boolean): Onay
+- `backupId: string` - Yedek ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const restore = await zapi.backup.restore('backup_64f8a1b2c3d4e5f6g7h8i9j0', {
-  target: 'staging',
-  include: {
-    database: true,
-    files: false,
-    config: true
-  },
-  confirm: true
-});
+const result = await backup.delete("backup_123");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Geri yükleme başarıyla başlatıldı",
-  "data": {
-    "restore": {
-      "id": "restore_64f8a1b2c3d4e5f6g7h8i9j0",
-      "backupId": "backup_64f8a1b2c3d4e5f6g7h8i9j0",
-      "target": "staging",
-      "status": "in_progress",
-      "include": {
-        "database": true,
-        "files": false,
-        "config": true
-      },
-      "progress": 0,
-      "estimatedTime": "15 minutes",
-      "startedAt": "2024-01-15T10:45:00Z",
-      "completedAt": null
-    }
-  }
+if (result.success) {
+  console.log('Yedek silindi:', result.data);
+  const { id, deletedAt, freedSpace } = result.data;
+} else {
+  console.error('Yedek silme hatası:', result.error);
 }
-*/
 ```
 
-## Tam Örnek Kullanım
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "backup_123",
+    "name": "Daily Backup - 2024-01-15",
+    "deletedAt": "2024-01-15T10:30:00Z",
+    "deletedBy": "user_123",
+    "freedSpace": {
+      "bytes": 1073741824,
+      "human": "1.0 GB"
+    },
+    "storage": {
+      "provider": "aws-s3",
+      "bucket": "zapi-backups",
+      "path": "backups/2024/01/15/backup_123.tar.gz",
+      "deleted": true
+    }
+  },
+  "message": "Yedek başarıyla silindi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BACKUP_DELETION_FAILED",
+    "message": "Yedek silinemedi - Dosya bulunamadı"
+  }
+}
+```
+
+---
+
+### 4. getRecordBackups(model: string, recordId: string)
+
+Belirli bir kaydın yedeklerini getirir
+
+**Parametreler:**
+- `model: string` - Model adı (users, apps, subscriptions)
+- `recordId: string` - Kayıt ID'si
+
+**Örnek Kullanım:**
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+const result = await backup.getRecordBackups("users", "user_123");
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
-
-try {
-  // 1. Yedekleri listele
-  const backups = await zapi.backup.list({
-    limit: 10,
-    status: 'completed'
+if (result.success) {
+  console.log('Kayıt yedekleri:', result.data);
+  result.data.backups.forEach(backup => {
+    console.log(`- ${backup.backupName} - ${backup.changedAt}`);
   });
-  console.log('Toplam yedek:', backups.data.pagination.totalItems);
-  
-  // 2. Yeni yedek oluştur
-  const create = await zapi.backup.create({
-    name: 'Manual Backup 2024-01-15',
-    type: 'full',
-    include: {
-      database: true,
-      files: true,
-      config: true
-    }
-  });
-  const backupId = create.data.backup.id;
-  console.log('Yeni yedek oluşturuldu:', backupId);
-  
-  // 3. Yedek detayını getir
-  const backup = await zapi.backup.get(backupId);
-  console.log('Yedek:', backup.data.backup.name);
-  console.log('Durum:', backup.data.backup.status);
-  
-  // 4. Yedekten geri yükle
-  const restore = await zapi.backup.restore(backupId, {
-    target: 'staging',
-    include: { database: true, files: false },
-    confirm: true
-  });
-  console.log('Geri yükleme başlatıldı:', restore.data.restore.startedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
+} else {
+  console.error('Kayıt yedek hatası:', result.error);
 }
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "model": "users",
+    "recordId": "user_123",
+    "record": {
+      "id": "user_123",
+      "email": "john@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "currentStatus": "active"
+    },
+    "backups": [
+      {
+        "id": "backup_123",
+        "backupName": "Daily Backup - 2024-01-15",
+        "backupType": "full",
+        "changedAt": "2024-01-15T10:30:00Z",
+        "changes": {
+          "firstName": {
+            "old": "Jane",
+            "new": "John"
+          },
+          "lastName": {
+            "old": "Smith",
+            "new": "Doe"
+          }
+        },
+        "changeType": "update",
+        "changedBy": "user_456"
+      },
+      {
+        "id": "backup_456",
+        "backupName": "Incremental Backup - 2024-01-14",
+        "backupType": "incremental",
+        "changedAt": "2024-01-14T15:30:00Z",
+        "changes": {
+          "status": {
+            "old": "inactive",
+            "new": "active"
+          }
+        },
+        "changeType": "update",
+        "changedBy": "admin_789"
+      },
+      {
+        "id": "backup_789",
+        "backupName": "Weekly Backup - 2024-01-10",
+        "backupType": "full",
+        "changedAt": "2024-01-10T10:30:00Z",
+        "changes": {
+          "email": {
+            "old": null,
+            "new": "john@example.com"
+          },
+          "firstName": {
+            "old": null,
+            "new": "Jane"
+          },
+          "lastName": {
+            "old": null,
+            "new": "Smith"
+          }
+        },
+        "changeType": "create",
+        "changedBy": "system"
+      }
+    ],
+    "summary": {
+      "totalBackups": 3,
+      "lastChange": "2024-01-15T10:30:00Z",
+      "changeTypes": {
+        "create": 1,
+        "update": 2,
+        "delete": 0
+      }
+    }
+  },
+  "message": "Kayıt yedekleri başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RECORD_NOT_FOUND",
+    "message": "Kayıt bulunamadı"
+  }
+}
+```
+
+---
+
+## Yedek Türleri
+
+| Tür | Açıklama | Kullanım |
+|-----|----------|----------|
+| `full` | Tam yedek | Günlük, haftalık |
+| `incremental` | Artımlı yedek | Saatlik, günlük |
+| `differential` | Fark yedek | Günlük |
+| `snapshot` | Anlık yedek | Gerçek zamanlı |
+
+## Yedek Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `pending` | Bekliyor |
+| `running` | Çalışıyor |
+| `completed` | Tamamlandı |
+| `failed` | Başarısız |
+| `cancelled` | İptal edildi |
+
+## Depolama Sağlayıcıları
+
+| Sağlayıcı | Açıklama | Özellikler |
+|-----------|----------|------------|
+| `aws-s3` | Amazon S3 | Yüksek güvenilirlik |
+| `google-cloud` | Google Cloud Storage | Düşük maliyet |
+| `azure-blob` | Azure Blob Storage | Entegrasyon |
+| `local` | Yerel depolama | Hızlı erişim |
+
+## Sıkıştırma Türleri
+
+| Tür | Açıklama | Sıkıştırma Oranı |
+|-----|----------|------------------|
+| `gzip` | GZIP | ~70% |
+| `bzip2` | BZIP2 | ~80% |
+| `lz4` | LZ4 | ~60% |
+| `none` | Sıkıştırma yok | 0% |
+
+## Şifreleme Türleri
+
+| Tür | Açıklama | Güvenlik |
+|-----|----------|----------|
+| `AES-256` | AES 256-bit | Yüksek |
+| `AES-128` | AES 128-bit | Orta |
+| `none` | Şifreleme yok | Düşük |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `BACKUP_NOT_FOUND` | Yedek bulunamadı |
+| `BACKUP_DELETION_FAILED` | Yedek silinemedi |
+| `RECORD_NOT_FOUND` | Kayıt bulunamadı |
+| `INVALID_BACKUP_ID` | Geçersiz yedek ID'si |
+| `INVALID_MODEL` | Geçersiz model adı |
+| `INSUFFICIENT_PERMISSIONS` | Yetersiz yetki |
+| `STORAGE_ERROR` | Depolama hatası |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## Güvenlik Notları
+
+- Yedekleri güvenli bir yerde saklayın
+- Şifreleme kullanın
+- Erişim yetkilerini sınırlayın
+- Yedekleri düzenli olarak test edin
+- Düzenli olarak güvenlik denetimleri yapın
+
+## Yedek Yönetimi
+
+```typescript
+// Yedek listesi
+const backups = await backup.list({
+  type: "full",
+  status: "completed",
+  limit: 10
+});
+
+// Yedek detayları
+const backupDetails = await backup.get("backup_123");
+
+// Yedek silme
+await backup.delete("backup_123");
+
+// Kayıt yedekleri
+const recordBackups = await backup.getRecordBackups("users", "user_123");
+```
+
+## Yedek Analizi
+
+```typescript
+// Yedek boyutu analizi
+const backups = await backup.list();
+const totalSize = backups.data.summary.totalSize;
+console.log('Toplam yedek boyutu:', totalSize);
+
+// En büyük yedekler
+const sortedBackups = backups.data.backups.sort((a, b) => 
+  b.size.bytes - a.size.bytes
+);
+console.log('En büyük yedek:', sortedBackups[0].name);
+
+// Yedek başarı oranı
+const successRate = (backups.data.summary.completedBackups / 
+  backups.data.summary.totalBackups) * 100;
+console.log('Yedek başarı oranı:', successRate + '%');
+```
+
+## Kayıt Değişiklik Takibi
+
+```typescript
+// Kayıt değişiklik geçmişi
+const recordBackups = await backup.getRecordBackups("users", "user_123");
+
+// Değişiklik türleri
+const changeTypes = recordBackups.data.summary.changeTypes;
+console.log('Oluşturma:', changeTypes.create);
+console.log('Güncelleme:', changeTypes.update);
+console.log('Silme:', changeTypes.delete);
+
+// Son değişiklik
+const lastChange = recordBackups.data.summary.lastChange;
+console.log('Son değişiklik:', new Date(lastChange));
+```
+
+## Yedek Optimizasyonu
+
+```typescript
+// Yedek sıkıştırma analizi
+const backups = await backup.list();
+const compressedBackups = backups.data.backups.filter(b => 
+  b.compression !== 'none'
+);
+
+console.log('Sıkıştırılmış yedekler:', compressedBackups.length);
+console.log('Sıkıştırma oranı:', 
+  (compressedBackups.length / backups.data.backups.length) * 100 + '%');
+
+// Depolama sağlayıcı analizi
+const storageProviders = {};
+backups.data.backups.forEach(backup => {
+  const provider = backup.storage.provider;
+  storageProviders[provider] = (storageProviders[provider] || 0) + 1;
+});
+
+console.log('Depolama sağlayıcıları:', storageProviders);
 ```

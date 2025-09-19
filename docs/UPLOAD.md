@@ -1,500 +1,683 @@
-# Upload Endpoint - 9 Metod
+# Upload Endpoint
 
-Dosya yükleme için kullanılan endpoint.
+Dosya yükleme endpoint'i - Dosya yükleme, yönetimi ve izleme işlemleri.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const upload = zapi.upload;
+```
 
 ## Metodlar
 
-### 1. upload(data: any): Promise<ApiResponse>
-Dosya yükler.
+### 1. upload(filePath: string, options: any)
+
+Dosya yükler
 
 **Parametreler:**
-- `data` (any): Yükleme verileri
-  - `file` (File): Yüklenecek dosya
-  - `type` (string): Dosya tipi
-  - `folder` (string): Klasör
+- `filePath: string` - Dosya yolu
+- `options: any` - Yükleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const upload = await zapi.upload.upload({
-  file: fileObject,
-  type: 'image',
-  folder: 'uploads'
+// Basit dosya yükleme
+const result = await upload.upload('/path/to/file.jpg', {
+  folder: 'images',
+  public: true,
+  metadata: {
+    title: 'Profil fotoğrafı',
+    description: 'Kullanıcı profil fotoğrafı'
+  }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Dosya başarıyla yüklendi",
-  "data": {
-    "upload": {
-      "id": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "filename": "image.jpg",
-      "originalName": "my-image.jpg",
-      "type": "image",
-      "size": "2.5MB",
-      "url": "https://api.zapi.com/uploads/upload_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-      "folder": "uploads",
-      "mimeType": "image/jpeg",
-      "dimensions": {
-        "width": 1920,
-        "height": 1080
-      },
-      "createdAt": "2024-01-15T10:40:00Z"
-    }
+if (result.success) {
+  console.log('Dosya yüklendi:', result.data);
+  console.log('Dosya URL:', result.data.url);
+  console.log('Dosya ID:', result.data.id);
+} else {
+  console.error('Dosya yükleme hatası:', result.error);
+}
+
+// Görsel dosyası yükleme
+const imageUpload = await upload.upload('/path/to/image.png', {
+  folder: 'uploads/images',
+  public: true,
+  compress: true,
+  resize: {
+    width: 800,
+    height: 600,
+    quality: 85
+  },
+  watermark: {
+    text: 'ZAPI',
+    position: 'bottom-right',
+    opacity: 0.5
+  },
+  metadata: {
+    title: 'Ürün resmi',
+    category: 'product',
+    tags: ['ürün', 'e-ticaret']
+  }
+});
+
+// Video dosyası yükleme
+const videoUpload = await upload.upload('/path/to/video.mp4', {
+  folder: 'uploads/videos',
+  public: false,
+  generateThumbnail: true,
+  extractAudio: true,
+  metadata: {
+    title: 'Eğitim videosu',
+    duration: 120,
+    resolution: '1920x1080'
+  }
+});
+
+// Belge dosyası yükleme
+const documentUpload = await upload.upload('/path/to/document.pdf', {
+  folder: 'uploads/documents',
+  public: false,
+  extractText: true,
+  generatePreview: true,
+  metadata: {
+    title: 'Sözleşme',
+    type: 'contract',
+    confidential: true
+  }
+});
+
+// Çoklu dosya yükleme
+const files = [
+  '/path/to/file1.jpg',
+  '/path/to/file2.png',
+  '/path/to/file3.pdf'
+];
+
+for (const filePath of files) {
+  const uploadResult = await upload.upload(filePath, {
+    folder: 'batch-upload',
+    public: true
+  });
+  
+  if (uploadResult.success) {
+    console.log(`${filePath} yüklendi: ${uploadResult.data.url}`);
   }
 }
-*/
 ```
 
-### 2. list(options: any = {}): Promise<ApiResponse>
-Yüklenen dosyaları listeler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `type` (string): Dosya tipi
-  - `folder` (string): Klasör
-
-**Detaylı Örnek:**
-```typescript
-const uploads = await zapi.upload.list({
-  limit: 10,
-  page: 1,
-  type: 'image',
-  folder: 'uploads'
-});
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "Yüklenen dosyalar getirildi",
   "data": {
-    "uploads": [
+    "id": "file_123456",
+    "filename": "image.jpg",
+    "originalName": "profile-photo.jpg",
+    "size": 1048576,
+    "mimeType": "image/jpeg",
+    "url": "https://storage.zapi.com/files/file_123456.jpg",
+    "publicUrl": "https://cdn.zapi.com/files/file_123456.jpg",
+    "folder": "uploads/images",
+    "isPublic": true,
+    "metadata": {
+      "title": "Profil fotoğrafı",
+      "description": "Kullanıcı profil fotoğrafı",
+      "uploadedBy": "user123",
+      "category": "profile"
+    },
+    "processing": {
+      "status": "completed",
+      "thumbnail": "https://storage.zapi.com/thumbnails/file_123456_thumb.jpg",
+      "compressed": true,
+      "resized": true,
+      "watermark": false
+    },
+    "security": {
+      "virusScanned": true,
+      "virusStatus": "clean",
+      "encrypted": true,
+      "accessLevel": "public"
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "Dosya başarıyla yüklendi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UPLOAD_FAILED",
+    "message": "Dosya yüklenemedi"
+  }
+}
+```
+
+---
+
+### 2. list(options: any)
+
+Yüklenen dosyaları listeler
+
+**Parametreler:**
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+// Tüm dosyaları listele
+const result = await upload.list();
+
+if (result.success) {
+  console.log('Dosyalar:', result.data);
+  result.data.files.forEach(file => {
+    console.log(`${file.filename} - ${file.size} bytes - ${file.url}`);
+  });
+} else {
+  console.error('Dosya listeleme hatası:', result.error);
+}
+
+// Filtreleme ile listele
+const filteredFiles = await upload.list({
+  folder: 'uploads/images',
+  mimeType: 'image/',
+  public: true,
+  page: 1,
+  limit: 20,
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
+  search: 'profil'
+});
+
+// Belirli tarih aralığındaki dosyalar
+const recentFiles = await upload.list({
+  dateFrom: '2024-01-01',
+  dateTo: '2024-01-31',
+  limit: 50
+});
+
+// Kullanıcıya ait dosyalar
+const userFiles = await upload.list({
+  uploadedBy: 'user123',
+  includePrivate: true
+});
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "files": [
       {
-        "id": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
+        "id": "file_123456",
         "filename": "image.jpg",
-        "originalName": "my-image.jpg",
-        "type": "image",
-        "size": "2.5MB",
-        "url": "https://api.zapi.com/uploads/upload_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-        "folder": "uploads",
+        "originalName": "profile-photo.jpg",
+        "size": 1048576,
         "mimeType": "image/jpeg",
-        "dimensions": {
-          "width": 1920,
-          "height": 1080
+        "url": "https://storage.zapi.com/files/file_123456.jpg",
+        "folder": "uploads/images",
+        "isPublic": true,
+        "metadata": {
+          "title": "Profil fotoğrafı"
         },
-        "createdAt": "2024-01-15T10:40:00Z"
+        "createdAt": "2024-01-15T10:30:00Z"
       }
     ],
     "pagination": {
-      "currentPage": 1,
-      "totalPages": 2,
-      "totalItems": 15,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
-    }
-  }
-}
-*/
-```
-
-### 3. get(uploadId: string): Promise<ApiResponse>
-Belirli bir dosyanın detaylarını getirir.
-
-**Parametreler:**
-- `uploadId` (string): Yükleme ID'si
-
-**Detaylı Örnek:**
-```typescript
-const upload = await zapi.upload.get('upload_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Dosya detayları getirildi",
-  "data": {
-    "upload": {
-      "id": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "filename": "image.jpg",
-      "originalName": "my-image.jpg",
-      "type": "image",
-      "size": "2.5MB",
-      "url": "https://api.zapi.com/uploads/upload_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-      "folder": "uploads",
-      "mimeType": "image/jpeg",
-      "dimensions": {
-        "width": 1920,
-        "height": 1080
-      },
-      "metadata": {
-        "camera": "iPhone 12",
-        "location": "Istanbul, Turkey",
-        "tags": ["nature", "landscape"]
-      },
-      "stats": {
-        "downloads": 25,
-        "views": 150,
-        "lastAccessed": "2024-01-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 4. update(uploadId: string, data: any): Promise<ApiResponse>
-Belirli bir dosyayı günceller.
-
-**Parametreler:**
-- `uploadId` (string): Yükleme ID'si
-- `data` (any): Güncellenecek veriler
-
-**Detaylı Örnek:**
-```typescript
-const update = await zapi.upload.update('upload_64f8a1b2c3d4e5f6g7h8i9j0', {
-  filename: 'updated-image.jpg',
-  folder: 'images',
-  metadata: {
-    camera: 'iPhone 13',
-    location: 'Istanbul, Turkey',
-    tags: ['nature', 'landscape', 'updated']
-  }
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Dosya başarıyla güncellendi",
-  "data": {
-    "upload": {
-      "id": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "filename": "updated-image.jpg",
-      "originalName": "my-image.jpg",
-      "type": "image",
-      "size": "2.5MB",
-      "url": "https://api.zapi.com/uploads/upload_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-      "folder": "images",
-      "mimeType": "image/jpeg",
-      "dimensions": {
-        "width": 1920,
-        "height": 1080
-      },
-      "metadata": {
-        "camera": "iPhone 13",
-        "location": "Istanbul, Turkey",
-        "tags": ["nature", "landscape", "updated"]
-      },
-      "stats": {
-        "downloads": 25,
-        "views": 150,
-        "lastAccessed": "2024-01-15T10:30:00Z"
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 5. delete(uploadId: string): Promise<ApiResponse>
-Belirli bir dosyayı siler.
-
-**Parametreler:**
-- `uploadId` (string): Yükleme ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteUpload = await zapi.upload.delete('upload_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Dosya başarıyla silindi",
-  "data": {
-    "deleted": {
-      "id": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "filename": "updated-image.jpg",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-### 6. download(uploadId: string): Promise<ApiResponse>
-Belirli bir dosyayı indirir.
-
-**Parametreler:**
-- `uploadId` (string): Yükleme ID'si
-
-**Detaylı Örnek:**
-```typescript
-const download = await zapi.upload.download('upload_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Dosya indirme başlatıldı",
-  "data": {
-    "download": {
-      "id": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "filename": "updated-image.jpg",
-      "url": "https://api.zapi.com/uploads/upload_64f8a1b2c3d4e5f6g7h8i9j0.jpg",
-      "size": "2.5MB",
-      "mimeType": "image/jpeg",
-      "downloadUrl": "https://api.zapi.com/download/upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "expiresAt": "2024-01-15T11:40:00Z",
-      "downloadedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 7. getStats(): Promise<ApiResponse>
-Yükleme istatistiklerini getirir.
-
-**Detaylı Örnek:**
-```typescript
-const stats = await zapi.upload.getStats();
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yükleme istatistikleri getirildi",
-  "data": {
+      "page": 1,
+      "limit": 20,
+      "total": 1,
+      "pages": 1
+    },
     "stats": {
-      "overview": {
-        "totalFiles": 1250,
-        "totalSize": "25.5GB",
-        "totalDownloads": 12500,
-        "totalViews": 75000
-      },
-      "byType": [
-        {
-          "type": "image",
-          "count": 800,
-          "size": "15.2GB",
-          "percentage": 64.0
-        },
-        {
-          "type": "video",
-          "count": 300,
-          "size": "8.5GB",
-          "percentage": 24.0
-        },
-        {
-          "type": "document",
-          "count": 150,
-          "size": "1.8GB",
-          "percentage": 12.0
-        }
-      ],
-      "byFolder": [
-        {
-          "folder": "uploads",
-          "count": 500,
-          "size": "10.2GB"
-        },
-        {
-          "folder": "images",
-          "count": 400,
-          "size": "8.5GB"
-        },
-        {
-          "folder": "documents",
-          "count": 350,
-          "size": "6.8GB"
-        }
-      ],
-      "recent": {
-        "uploadsToday": 25,
-        "uploadsThisWeek": 150,
-        "uploadsThisMonth": 600
-      }
+      "totalFiles": 1,
+      "totalSize": 1048576,
+      "publicFiles": 1,
+      "privateFiles": 0
     }
   }
 }
-*/
 ```
 
-### 8. getMetadata(uploadId: string, path: string): Promise<ApiResponse>
-Dosya metadata bilgilerini getirir.
+---
+
+### 3. get(fileId: string)
+
+Dosya detaylarını getirir
 
 **Parametreler:**
-- `uploadId` (string): Yükleme ID'si
-- `path` (string): Metadata path'i
+- `fileId: string` - Dosya ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const metadata = await zapi.upload.getMetadata('upload_64f8a1b2c3d4e5f6g7h8i9j0', 'exif');
+const result = await upload.get('file_123456');
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('Dosya detayları:', result.data);
+  console.log('Dosya boyutu:', result.data.size);
+  console.log('MIME türü:', result.data.mimeType);
+  console.log('Dosya URL:', result.data.url);
+} else {
+  console.error('Dosya getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Metadata getirildi",
   "data": {
+    "id": "file_123456",
+    "filename": "image.jpg",
+    "originalName": "profile-photo.jpg",
+    "size": 1048576,
+    "mimeType": "image/jpeg",
+    "url": "https://storage.zapi.com/files/file_123456.jpg",
+    "publicUrl": "https://cdn.zapi.com/files/file_123456.jpg",
+    "folder": "uploads/images",
+    "isPublic": true,
     "metadata": {
-      "uploadId": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "exif",
-      "value": {
-        "camera": "iPhone 13",
-        "lens": "iPhone 13 back dual camera 1.57mm f/1.6",
-        "iso": 100,
-        "aperture": "f/1.6",
-        "shutterSpeed": "1/120",
-        "focalLength": "1.57mm",
-        "flash": "No Flash",
-        "whiteBalance": "Auto",
-        "exposureMode": "Auto",
-        "meteringMode": "Multi-segment"
-      },
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
+      "title": "Profil fotoğrafı",
+      "description": "Kullanıcı profil fotoğrafı"
+    },
+    "processing": {
+      "status": "completed",
+      "thumbnail": "https://storage.zapi.com/thumbnails/file_123456_thumb.jpg"
+    },
+    "security": {
+      "virusScanned": true,
+      "virusStatus": "clean"
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
-*/
 ```
 
-### 9. updateMetadata(uploadId: string, path: string, value: any): Promise<ApiResponse>
-Dosya metadata bilgilerini günceller.
+---
+
+### 4. delete(fileId: string)
+
+Dosyayı siler
 
 **Parametreler:**
-- `uploadId` (string): Yükleme ID'si
-- `path` (string): Metadata path'i
-- `value` (any): Güncellenecek değer
+- `fileId: string` - Dosya ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const updateMetadata = await zapi.upload.updateMetadata('upload_64f8a1b2c3d4e5f6g7h8i9j0', 'exif', {
-  camera: 'iPhone 14',
-  lens: 'iPhone 14 back dual camera 1.57mm f/1.6',
-  iso: 200,
-  aperture: 'f/1.6',
-  shutterSpeed: '1/60',
-  focalLength: '1.57mm',
-  flash: 'No Flash',
-  whiteBalance: 'Auto',
-  exposureMode: 'Auto',
-  meteringMode: 'Multi-segment'
+const result = await upload.delete('file_123456');
+
+if (result.success) {
+  console.log('Dosya silindi:', result.data);
+} else {
+  console.error('Dosya silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "file_123456",
+    "deletedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 5. getStats()
+
+Dosya yükleme istatistiklerini getirir
+
+**Parametreler:**
+- Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await upload.getStats();
+
+if (result.success) {
+  console.log('Yükleme istatistikleri:', result.data);
+  console.log('Toplam dosya sayısı:', result.data.totalFiles);
+  console.log('Toplam boyut:', result.data.totalSize);
+  console.log('Kullanılan alan:', result.data.usedSpace);
+} else {
+  console.error('İstatistik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalFiles": 150,
+    "totalSize": 1073741824,
+    "usedSpace": "1.0 GB",
+    "availableSpace": "9.0 GB",
+    "publicFiles": 120,
+    "privateFiles": 30,
+    "byType": {
+      "image": 80,
+      "video": 20,
+      "document": 30,
+      "audio": 15,
+      "other": 5
+    },
+    "byFolder": {
+      "uploads/images": 60,
+      "uploads/videos": 20,
+      "uploads/documents": 30,
+      "uploads/audio": 15,
+      "uploads/other": 5
+    },
+    "recentUploads": 25,
+    "lastUpload": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 6. cleanup()
+
+Gereksiz dosyaları temizler
+
+**Parametreler:**
+- Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await upload.cleanup();
+
+if (result.success) {
+  console.log('Temizlik tamamlandı:', result.data);
+  console.log('Silinen dosya sayısı:', result.data.deletedFiles);
+  console.log('Kazanılan alan:', result.data.freedSpace);
+} else {
+  console.error('Temizlik hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "deletedFiles": 15,
+    "freedSpace": 52428800,
+    "freedSpaceFormatted": "50 MB",
+    "cleanupType": "orphaned_files",
+    "cleanedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 7. getProgress(uploadId: string)
+
+Belirli yükleme işleminin ilerlemesini getirir
+
+**Parametreler:**
+- `uploadId: string` - Yükleme ID'si
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await upload.getProgress('upload_789');
+
+if (result.success) {
+  console.log('Yükleme ilerlemesi:', result.data);
+  console.log('İlerleme yüzdesi:', result.data.progress + '%');
+  console.log('Durum:', result.data.status);
+} else {
+  console.error('İlerleme getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "uploadId": "upload_789",
+    "filename": "large-video.mp4",
+    "status": "uploading",
+    "progress": 65,
+    "bytesUploaded": 65536000,
+    "totalBytes": 100663296,
+    "speed": 1048576,
+    "estimatedTime": 35,
+    "startedAt": "2024-01-15T10:25:00Z",
+    "lastUpdate": "2024-01-15T10:28:30Z"
+  }
+}
+```
+
+---
+
+### 8. getAllProgress()
+
+Tüm aktif yükleme işlemlerinin ilerlemesini getirir
+
+**Parametreler:**
+- Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await upload.getAllProgress();
+
+if (result.success) {
+  console.log('Tüm yükleme işlemleri:', result.data);
+  result.data.uploads.forEach(upload => {
+    console.log(`${upload.filename}: ${upload.progress}%`);
+  });
+} else {
+  console.error('İlerleme listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "uploads": [
+      {
+        "uploadId": "upload_789",
+        "filename": "video.mp4",
+        "status": "uploading",
+        "progress": 65,
+        "speed": 1048576
+      },
+      {
+        "uploadId": "upload_790",
+        "filename": "image.jpg",
+        "status": "processing",
+        "progress": 100,
+        "speed": 0
+      }
+    ],
+    "totalActive": 2
+  }
+}
+```
+
+---
+
+### 9. createSignedUrl(fileId: string, options: any)
+
+Dosya için imzalı URL oluşturur
+
+**Parametreler:**
+- `fileId: string` - Dosya ID'si
+- `options: any` - URL seçenekleri (opsiyonel)
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await upload.createSignedUrl('file_123456', {
+  expiresIn: 3600,
+  download: true,
+  filename: 'custom-name.jpg'
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata başarıyla güncellendi",
-  "data": {
-    "metadata": {
-      "uploadId": "upload_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "exif",
-      "value": {
-        "camera": "iPhone 14",
-        "lens": "iPhone 14 back dual camera 1.57mm f/1.6",
-        "iso": 200,
-        "aperture": "f/1.6",
-        "shutterSpeed": "1/60",
-        "focalLength": "1.57mm",
-        "flash": "No Flash",
-        "whiteBalance": "Auto",
-        "exposureMode": "Auto",
-        "meteringMode": "Multi-segment"
-      },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('İmzalı URL:', result.data.url);
+  console.log('Son kullanma:', result.data.expiresAt);
+} else {
+  console.error('İmzalı URL oluşturma hatası:', result.error);
 }
-*/
+
+// Farklı seçeneklerle
+const downloadUrl = await upload.createSignedUrl('file_123456', {
+  expiresIn: 7200,
+  download: true,
+  responseContentType: 'image/jpeg'
+});
+
+const viewUrl = await upload.createSignedUrl('file_123456', {
+  expiresIn: 1800,
+  download: false
+});
 ```
 
-## Tam Örnek Kullanım
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "https://storage.zapi.com/files/file_123456.jpg?signature=abc123&expires=1705312800",
+    "expiresAt": "2024-01-15T11:30:00Z",
+    "expiresIn": 3600,
+    "download": true,
+    "filename": "custom-name.jpg"
+  }
+}
+```
+
+---
+
+## Desteklenen Dosya Türleri
+
+### Görsel Dosyalar
+- **JPEG** (.jpg, .jpeg)
+- **PNG** (.png)
+- **GIF** (.gif)
+- **WebP** (.webp)
+- **SVG** (.svg)
+
+### Video Dosyalar
+- **MP4** (.mp4)
+- **AVI** (.avi)
+- **MOV** (.mov)
+- **MKV** (.mkv)
+- **WebM** (.webm)
+
+### Ses Dosyalar
+- **MP3** (.mp3)
+- **WAV** (.wav)
+- **AAC** (.aac)
+- **FLAC** (.flac)
+- **OGG** (.ogg)
+
+### Belge Dosyalar
+- **PDF** (.pdf)
+- **DOC** (.doc)
+- **DOCX** (.docx)
+- **XLS** (.xls)
+- **XLSX** (.xlsx)
+- **PPT** (.ppt)
+- **PPTX** (.pptx)
+
+### Arşiv Dosyalar
+- **ZIP** (.zip)
+- **RAR** (.rar)
+- **7Z** (.7z)
+- **TAR** (.tar)
+- **GZ** (.gz)
+
+## Dosya Boyut Limitleri
+
+| Tür | Maksimum Boyut |
+|-----|----------------|
+| Görsel | 10MB |
+| Video | 100MB |
+| Ses | 25MB |
+| Belge | 50MB |
+| Arşiv | 100MB |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `UPLOAD_FAILED` | Dosya yüklenemedi |
+| `FILE_TOO_LARGE` | Dosya çok büyük |
+| `INVALID_FILE_TYPE` | Geçersiz dosya türü |
+| `FILE_NOT_FOUND` | Dosya bulunamadı |
+| `UPLOAD_QUOTA_EXCEEDED` | Yükleme kotası aşıldı |
+| `VIRUS_DETECTED` | Virüs tespit edildi |
+
+## Güvenlik Notları
+
+- Dosyaları virüs taramasından geçirin
+- Hassas dosyaları şifreleyin
+- Dosya erişim izinlerini kontrol edin
+- Düzenli güvenlik güncellemeleri yapın
+
+## Dosya Yükleme Yönetimi
 
 ```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
+// Dosya yükle
+const upload = await upload.upload('/path/to/file.jpg', {
+  folder: 'images',
+  public: true
+});
 
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
+// Dosyaları listele
+const files = await upload.list({
+  folder: 'images'
+});
 
-try {
-  // 1. Dosya yükle
-  const upload = await zapi.upload.upload({
-    file: fileObject,
-    type: 'image',
-    folder: 'uploads'
-  });
-  const uploadId = upload.data.upload.id;
-  console.log('Dosya yüklendi:', uploadId);
-  console.log('Dosya URL:', upload.data.upload.url);
-  
-  // 2. Yüklenen dosyaları listele
-  const uploads = await zapi.upload.list({
-    limit: 10,
-    page: 1,
-    type: 'image',
-    folder: 'uploads'
-  });
-  console.log('Toplam dosya:', uploads.data.pagination.totalItems);
-  
-  // 3. Dosya detayını getir
-  const uploadDetail = await zapi.upload.get(uploadId);
-  console.log('Dosya adı:', uploadDetail.data.upload.filename);
-  console.log('Dosya boyutu:', uploadDetail.data.upload.size);
-  
-  // 4. Dosya güncelle
-  const update = await zapi.upload.update(uploadId, {
-    filename: 'updated-image.jpg',
-    folder: 'images',
-    metadata: {
-      camera: 'iPhone 13',
-      location: 'Istanbul, Turkey',
-      tags: ['nature', 'landscape', 'updated']
-    }
-  });
-  console.log('Dosya güncellendi:', update.data.upload.updatedAt);
-  
-  // 5. Dosya indir
-  const download = await zapi.upload.download(uploadId);
-  console.log('İndirme URL:', download.data.download.downloadUrl);
-  console.log('Son kullanma:', download.data.download.expiresAt);
-  
-  // 6. Yükleme istatistiklerini getir
-  const stats = await zapi.upload.getStats();
-  console.log('Toplam dosya:', stats.data.stats.overview.totalFiles);
-  console.log('Toplam boyut:', stats.data.stats.overview.totalSize);
-  
-  // 7. Metadata getir
-  const metadata = await zapi.upload.getMetadata(uploadId, 'exif');
-  console.log('Kamera:', metadata.data.metadata.value.camera);
-  console.log('ISO:', metadata.data.metadata.value.iso);
-  
-  // 8. Metadata güncelle
-  const updateMetadata = await zapi.upload.updateMetadata(uploadId, 'exif', {
-    camera: 'iPhone 14',
-    iso: 200,
-    aperture: 'f/1.6'
-  });
-  console.log('Metadata güncellendi:', updateMetadata.data.metadata.updatedAt);
-  
-  // 9. Dosya sil
-  const deleteUpload = await zapi.upload.delete(uploadId);
-  console.log('Dosya silindi:', deleteUpload.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
+// Dosya detayları
+const file = await upload.get('file_123');
+
+// İmzalı URL oluştur
+const signedUrl = await upload.createSignedUrl('file_123', {
+  expiresIn: 3600
+});
+
+// Dosyayı sil
+await upload.delete('file_123');
 ```

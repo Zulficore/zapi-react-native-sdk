@@ -63,41 +63,41 @@ export class ZAPI {
   private deviceInfo?: DeviceInfo;
 
   // Endpoint instances
-  public auth: Auth;
-  public user: User;
-  public admin: Admin;
-  public apps: Apps;
-  public aiProvider: AIProvider;
-  public apiKeys: APIKeys;
-  public audio: Audio;
-  public authFirebase: AuthFirebase;
-  public authOAuth: AuthOAuth;
-  public backup: Backup;
-  public config: Config;
-  public content: Content;
-  public debugEndpoint: Debug;
-  public docs: Docs;
-  public embeddings: Embeddings;
-  public images: Images;
-  public info: Info;
-  public logs: Logs;
-  public mailTemplates: MailTemplates;
-  public notifications: Notifications;
-  public plans: Plans;
-  public realtime: Realtime;
-  public roles: Roles;
-  public subscription: Subscription;
-  public system: System;
-  public upload: Upload;
-  public responses: Responses;
-  public webhook: Webhook;
-  public functions: Functions;
-  public oauthMetadata: OAuthMetadata;
-  public metadata: Metadata;
-  public video: Video;
-  public users: Users;
-  public logger: Logger;
-  public appleTest: AppleTest;
+  public auth!: Auth;
+  public user!: User;
+  public admin!: Admin;
+  public apps!: Apps;
+  public aiProvider!: AIProvider;
+  public apiKeys!: APIKeys;
+  public audio!: Audio;
+  public authFirebase!: AuthFirebase;
+  public authOAuth!: AuthOAuth;
+  public backup!: Backup;
+  public configEndpoint!: Config;
+  public content!: Content;
+  public debugEndpoint!: Debug;
+  public docs!: Docs;
+  public embeddings!: Embeddings;
+  public images!: Images;
+  public info!: Info;
+  public logs!: Logs;
+  public mailTemplates!: MailTemplates;
+  public notifications!: Notifications;
+  public plans!: Plans;
+  public realtime!: Realtime;
+  public roles!: Roles;
+  public subscription!: Subscription;
+  public system!: System;
+  public upload!: Upload;
+  public responses!: Responses;
+  public webhook!: Webhook;
+  public functions!: Functions;
+  public oauthMetadata!: OAuthMetadata;
+  public metadata!: Metadata;
+  public video!: Video;
+  public users!: Users;
+  public logger!: Logger;
+  public appleTest!: AppleTest;
 
   constructor(apiKey: string, appId: string, baseUrl?: string, options: any = {}) {
     if (!apiKey || apiKey.trim() === '') {
@@ -134,8 +134,11 @@ export class ZAPI {
       appId: this.config.appId,
       timeout: this.config.timeout!,
       debug: this.config.debug!,
-      bearerToken: this.config.bearerToken,
     };
+    
+    if (this.config.bearerToken !== undefined) {
+      httpConfig.bearerToken = this.config.bearerToken;
+    }
 
     return new HttpClient(httpConfig, this.deviceInfo);
   }
@@ -154,7 +157,7 @@ export class ZAPI {
     this.authFirebase = new AuthFirebase(this);
     this.authOAuth = new AuthOAuth(this);
     this.backup = new Backup(this);
-    this.config = new Config(this);
+    this.configEndpoint = new Config(this);
     this.content = new Content(this);
     this.debugEndpoint = new Debug(this);
     this.docs = new Docs(this);
@@ -260,7 +263,9 @@ export class ZAPI {
    * Storage provider'ı ayarlar
    */
   setStorage(storage: ZAPIConfig['storage']): this {
-    this.config.storage = storage;
+    if (storage !== undefined) {
+      this.config.storage = storage;
+    }
     return this;
   }
 
@@ -347,22 +352,36 @@ export class ZAPI {
     deviceInfo?: DeviceInfo;
     endpoints: string[];
   } {
-    return {
+    const result: {
+      version: string;
+      baseUrl: string;
+      appId: string;
+      debug: boolean;
+      timeout: number;
+      deviceInfo?: DeviceInfo;
+      endpoints: string[];
+    } = {
       version: ZAPI.getVersion(),
       baseUrl: this.config.baseUrl!,
       appId: this.config.appId,
       debug: this.config.debug!,
       timeout: this.config.timeout!,
-      deviceInfo: this.deviceInfo,
       endpoints: [
         'auth', 'user', 'admin', 'apps', 'aiProvider', 'apiKeys',
         'audio', 'authFirebase', 'authOAuth', 'backup', 'config',
         'content', 'debug', 'docs', 'embeddings', 'images', 'info',
         'logs', 'mailTemplates', 'notifications', 'plans', 'realtime',
         'roles', 'subscription', 'system', 'upload', 'responses',
-        'webhook', 'functions', 'oauthMetadata', 'metadata'
+        'webhook', 'functions', 'oauthMetadata', 'metadata', 'video',
+        'users', 'logger', 'appleTest'
       ]
     };
+    
+    if (this.deviceInfo !== undefined) {
+      result.deviceInfo = this.deviceInfo;
+    }
+    
+    return result;
   }
 
   /**
@@ -377,11 +396,19 @@ export class ZAPI {
       ? this.config.bearerToken.substring(0, 20) + '...' 
       : undefined;
 
-    return {
+    const result: Omit<ZAPIConfig, 'apiKey' | 'bearerToken'> & {
+      apiKey: string;
+      bearerToken?: string;
+    } = {
       ...this.config,
       apiKey: maskedApiKey,
-      bearerToken: maskedBearerToken,
     };
+    
+    if (maskedBearerToken !== undefined) {
+      result.bearerToken = maskedBearerToken;
+    }
+    
+    return result;
   }
 
   /**
@@ -390,7 +417,10 @@ export class ZAPI {
   async cleanup(): Promise<void> {
     // WebSocket bağlantılarını kapat
     if (this.realtime) {
-      await this.realtime.disconnect();
+      // Realtime endpoint'inde disconnect metodu varsa çağır
+      if (typeof (this.realtime as any).disconnect === 'function') {
+        await (this.realtime as any).disconnect();
+      }
     }
 
     // Storage'dan token'ları temizle (opsiyonel)

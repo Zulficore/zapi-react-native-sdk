@@ -1,6 +1,6 @@
 import { BaseEndpoint } from './BaseEndpoint';
-import { ApiResponse } from '../types/ApiResponse';
-import { ValidationException } from '../exceptions/ValidationException';
+import { ZAPI } from '../ZAPI';
+import { ApiResponse } from '../types';
 
 /**
  * Logger Endpoint
@@ -8,6 +8,9 @@ import { ValidationException } from '../exceptions/ValidationException';
  * Bu sınıf logger işlemlerini yönetir.
  */
 export class Logger extends BaseEndpoint {
+  constructor(zapi: ZAPI) {
+    super(zapi);
+  }
   /**
    * Logger bilgilerini getirir
    * 

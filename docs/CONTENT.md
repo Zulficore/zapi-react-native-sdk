@@ -1,605 +1,735 @@
-# Content Endpoint - 14 Metod
+# Content Endpoint
 
-İçerik yönetimi için kullanılan endpoint.
+İçerik yönetimi endpoint'leri - İçerik oluşturma, güncelleme, arama, kategoriler ve metadata yönetimi.
+
+## Kullanım
+
+```typescript
+import ZAPI from 'zapi-react-native-sdk';
+
+const zapi = new ZAPI({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.zapi.com'
+});
+
+const content = zapi.content;
+```
 
 ## Metodlar
 
-### 1. list(options: any = {}): Promise<ApiResponse>
-İçerikleri listeler.
+### 1. list(options: any)
+
+İçerikleri listeler
 
 **Parametreler:**
-- `options` (any): Filtreleme seçenekleri
-  - `limit` (number): Sayfa başına kayıt sayısı
-  - `page` (number): Sayfa numarası
-  - `search` (string): Arama terimi
-  - `type` (string): İçerik tipi
-  - `status` (string): İçerik durumu
+- `options: any` - Filtreleme seçenekleri (opsiyonel)
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const content = await zapi.content.list({
+// Tüm içerikleri getir
+const result = await content.list();
+
+// Filtreleme ile getir
+const result = await content.list({
   limit: 10,
-  page: 1,
-  search: 'article',
-  type: 'text',
-  status: 'published'
+  offset: 0,
+  category: "tutorial",
+  status: "published"
 });
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('İçerikler:', result.data);
+} else {
+  console.error('İçerik listesi hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "İçerikler getirildi",
   "data": {
-    "content": [
+    "contents": [
       {
-        "id": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-        "title": "AI ve Gelecek",
-        "type": "text",
+        "id": "content_123",
+        "title": "React Native Başlangıç Rehberi",
+        "slug": "react-native-baslangic-rehberi",
+        "category": "tutorial",
+        "type": "article",
         "status": "published",
-        "content": "Yapay zeka teknolojisi hızla gelişiyor...",
-        "author": {
-          "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-          "name": "John Doe",
-          "email": "john@example.com"
-        },
-        "tags": ["ai", "technology", "future"],
-        "category": "technology",
-        "views": 1250,
-        "likes": 45,
-        "createdAt": "2024-01-01T10:30:00Z",
+        "createdAt": "2024-01-15T10:30:00Z",
         "updatedAt": "2024-01-15T10:30:00Z"
       }
     ],
-    "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalItems": 45,
-      "itemsPerPage": 10,
-      "hasNext": true,
-      "hasPrev": false
-    }
-  }
+    "total": 1,
+    "page": 1,
+    "limit": 10
+  },
+  "message": "İçerikler başarıyla listelendi"
 }
-*/
 ```
 
-### 2. create(data: any): Promise<ApiResponse>
-Yeni içerik oluşturur.
+---
+
+### 2. create(data: any)
+
+Yeni içerik oluşturur
 
 **Parametreler:**
-- `data` (any): İçerik verileri
-  - `title` (string): Başlık
-  - `type` (string): İçerik tipi
-  - `content` (string): İçerik
-  - `tags` (string[]): Etiketler
+- `data: any` - İçerik bilgileri
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const create = await zapi.content.create({
-  title: 'Yeni Makale',
-  type: 'text',
-  content: 'Bu yeni bir makale içeriğidir...',
-  tags: ['yeni', 'makale', 'test'],
-  category: 'technology'
+const result = await content.create({
+  title: "React Native Başlangıç Rehberi",
+  slug: "react-native-baslangic-rehberi",
+  content: "React Native ile mobil uygulama geliştirme...",
+  category: "tutorial",
+  type: "article",
+  status: "draft",
+  tags: ["react-native", "mobile", "tutorial"],
+  metadata: {
+    author: "John Doe",
+    readingTime: 5
+  }
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "İçerik başarıyla oluşturuldu",
-  "data": {
-    "content": {
-      "id": "content_64f8a1b2c3d4e5f6g7h8i9j1",
-      "title": "Yeni Makale",
-      "type": "text",
-      "status": "draft",
-      "content": "Bu yeni bir makale içeriğidir...",
-      "author": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "tags": ["yeni", "makale", "test"],
-      "category": "technology",
-      "views": 0,
-      "likes": 0,
-      "createdAt": "2024-01-15T10:40:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('İçerik oluşturuldu:', result.data);
+} else {
+  console.error('İçerik oluşturma hatası:', result.error);
 }
-*/
 ```
 
-### 3. get(contentId: string): Promise<ApiResponse>
-Belirli bir içeriğin detaylarını getirir.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-
-**Detaylı Örnek:**
-```typescript
-const content = await zapi.content.get('content_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "İçerik detayları getirildi",
   "data": {
-    "content": {
-      "id": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "title": "AI ve Gelecek",
-      "type": "text",
-      "status": "published",
-      "content": "Yapay zeka teknolojisi hızla gelişiyor...",
-      "author": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "tags": ["ai", "technology", "future"],
-      "category": "technology",
-      "views": 1250,
-      "likes": 45,
-      "comments": [
-        {
-          "id": "comment_64f8a1b2c3d4e5f6g7h8i9j0",
-          "content": "Çok güzel bir makale!",
-          "author": "Jane Doe",
-          "createdAt": "2024-01-15T10:30:00Z"
-        }
-      ],
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
-    }
-  }
+    "id": "content_123",
+    "title": "React Native Başlangıç Rehberi",
+    "slug": "react-native-baslangic-rehberi",
+    "category": "tutorial",
+    "type": "article",
+    "status": "draft",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "İçerik başarıyla oluşturuldu"
 }
-*/
 ```
 
-### 4. update(contentId: string, data: any): Promise<ApiResponse>
-Belirli bir içeriği günceller.
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "İçerik başlığı zaten kullanılıyor"
+  }
+}
+```
+
+---
+
+### 3. get(contentId: string)
+
+Belirli bir içeriği getirir
 
 **Parametreler:**
-- `contentId` (string): İçerik ID'si
-- `data` (any): Güncellenecek veriler
+- `contentId: string` - İçerik ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const update = await zapi.content.update('content_64f8a1b2c3d4e5f6g7h8i9j0', {
-  title: 'AI ve Gelecek - Güncellenmiş',
-  content: 'Yapay zeka teknolojisi hızla gelişiyor ve gelecekte...',
-  tags: ['ai', 'technology', 'future', 'updated'],
-  status: 'published'
+const result = await content.get("content_123");
+
+if (result.success) {
+  console.log('İçerik detayı:', result.data);
+  const { title, content, category, tags } = result.data;
+} else {
+  console.error('İçerik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "content_123",
+    "title": "React Native Başlangıç Rehberi",
+    "slug": "react-native-baslangic-rehberi",
+    "content": "React Native ile mobil uygulama geliştirme...",
+    "category": "tutorial",
+    "type": "article",
+    "status": "published",
+    "tags": ["react-native", "mobile", "tutorial"],
+    "metadata": {
+      "author": "John Doe",
+      "readingTime": 5
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "İçerik başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONTENT_NOT_FOUND",
+    "message": "İçerik bulunamadı"
+  }
+}
+```
+
+---
+
+### 4. update(contentId: string, data: any)
+
+İçeriği günceller
+
+**Parametreler:**
+- `contentId: string` - İçerik ID'si
+- `data: any` - Güncellenecek bilgiler
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.update("content_123", {
+  title: "Güncellenmiş React Native Rehberi",
+  content: "Güncellenmiş içerik...",
+  status: "published"
 });
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "İçerik başarıyla güncellendi",
-  "data": {
-    "content": {
-      "id": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "title": "AI ve Gelecek - Güncellenmiş",
-      "type": "text",
-      "status": "published",
-      "content": "Yapay zeka teknolojisi hızla gelişiyor ve gelecekte...",
-      "author": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "tags": ["ai", "technology", "future", "updated"],
-      "category": "technology",
-      "views": 1250,
-      "likes": 45,
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('İçerik güncellendi:', result.data);
+} else {
+  console.error('İçerik güncelleme hatası:', result.error);
 }
-*/
 ```
 
-### 5. delete(contentId: string): Promise<ApiResponse>
-Belirli bir içeriği siler.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-
-**Detaylı Örnek:**
-```typescript
-const deleteContent = await zapi.content.delete('content_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "İçerik başarıyla silindi",
   "data": {
-    "deleted": {
-      "id": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "title": "AI ve Gelecek - Güncellenmiş",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+    "id": "content_123",
+    "title": "Güncellenmiş React Native Rehberi",
+    "status": "published",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "İçerik başarıyla güncellendi"
 }
-*/
 ```
 
-### 6. publish(contentId: string): Promise<ApiResponse>
-Belirli bir içeriği yayınlar.
+---
+
+### 5. delete(contentId: string)
+
+İçeriği siler
 
 **Parametreler:**
-- `contentId` (string): İçerik ID'si
+- `contentId: string` - İçerik ID'si
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const publish = await zapi.content.publish('content_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await content.delete("content_123");
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "İçerik başarıyla yayınlandı",
-  "data": {
-    "content": {
-      "id": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "title": "AI ve Gelecek - Güncellenmiş",
-      "status": "published",
-      "publishedAt": "2024-01-15T10:40:00Z",
-      "publishedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+if (result.success) {
+  console.log('İçerik silindi');
+} else {
+  console.error('İçerik silme hatası:', result.error);
 }
-*/
 ```
 
-### 7. unpublish(contentId: string): Promise<ApiResponse>
-Belirli bir içeriği yayından kaldırır.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-
-**Detaylı Örnek:**
-```typescript
-const unpublish = await zapi.content.unpublish('content_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "İçerik başarıyla yayından kaldırıldı",
-  "data": {
-    "content": {
-      "id": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "title": "AI ve Gelecek - Güncellenmiş",
-      "status": "draft",
-      "unpublishedAt": "2024-01-15T10:40:00Z",
-      "unpublishedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
+  "data": {},
+  "message": "İçerik başarıyla silindi"
 }
-*/
 ```
 
-### 8. like(contentId: string): Promise<ApiResponse>
-Belirli bir içeriği beğenir.
+---
+
+### 6. getCategories()
+
+İçerik kategorilerini getirir
 
 **Parametreler:**
-- `contentId` (string): İçerik ID'si
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const like = await zapi.content.like('content_64f8a1b2c3d4e5f6g7h8i9j0');
+const result = await content.getCategories();
 
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "İçerik beğenildi",
-  "data": {
-    "like": {
-      "contentId": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "likedAt": "2024-01-15T10:40:00Z"
-    }
-  }
+if (result.success) {
+  console.log('Kategoriler:', result.data);
+} else {
+  console.error('Kategori getirme hatası:', result.error);
 }
-*/
 ```
 
-### 9. unlike(contentId: string): Promise<ApiResponse>
-Belirli bir içeriğin beğenisini kaldırır.
+**Başarılı Yanıt:**
 
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-
-**Detaylı Örnek:**
-```typescript
-const unlike = await zapi.content.unlike('content_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
+```json
 {
   "success": true,
-  "message": "İçerik beğenisi kaldırıldı",
   "data": {
-    "unlike": {
-      "contentId": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "userId": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-      "unlikedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 10. comment(contentId: string, data: any): Promise<ApiResponse>
-Belirli bir içeriğe yorum yapar.
-
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-- `data` (any): Yorum verileri
-  - `content` (string): Yorum içeriği
-
-**Detaylı Örnek:**
-```typescript
-const comment = await zapi.content.comment('content_64f8a1b2c3d4e5f6g7h8i9j0', {
-  content: 'Çok güzel bir makale!'
-});
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yorum başarıyla eklendi",
-  "data": {
-    "comment": {
-      "id": "comment_64f8a1b2c3d4e5f6g7h8i9j1",
-      "contentId": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "content": "Çok güzel bir makale!",
-      "author": {
-        "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-        "name": "John Doe",
-        "email": "john@example.com"
-      },
-      "createdAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 11. getComments(contentId: string): Promise<ApiResponse>
-Belirli bir içeriğin yorumlarını getirir.
-
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-
-**Detaylı Örnek:**
-```typescript
-const comments = await zapi.content.getComments('content_64f8a1b2c3d4e5f6g7h8i9j0');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Yorumlar getirildi",
-  "data": {
-    "comments": [
+    "categories": [
       {
-        "id": "comment_64f8a1b2c3d4e5f6g7h8i9j0",
-        "content": "Çok güzel bir makale!",
-        "author": {
-          "id": "user_64f8a1b2c3d4e5f6g7h8i9j0",
-          "name": "John Doe",
-          "email": "john@example.com"
-        },
-        "createdAt": "2024-01-15T10:30:00Z"
+        "id": "tutorial",
+        "name": "Tutorial",
+        "description": "Öğretici içerikler",
+        "count": 25
+      },
+      {
+        "id": "news",
+        "name": "Haberler",
+        "description": "Güncel haberler",
+        "count": 10
+      }
+    ]
+  },
+  "message": "Kategoriler başarıyla getirildi"
+}
+```
+
+---
+
+### 7. getTypes()
+
+İçerik tiplerini getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.getTypes();
+
+if (result.success) {
+  console.log('İçerik tipleri:', result.data);
+} else {
+  console.error('İçerik tipi getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "types": [
+      {
+        "id": "article",
+        "name": "Makale",
+        "description": "Uzun form içerik"
+      },
+      {
+        "id": "news",
+        "name": "Haber",
+        "description": "Kısa haber içeriği"
+      },
+      {
+        "id": "video",
+        "name": "Video",
+        "description": "Video içerik"
+      }
+    ]
+  },
+  "message": "İçerik tipleri başarıyla getirildi"
+}
+```
+
+---
+
+### 8. getLanguages()
+
+Desteklenen dilleri getirir
+
+**Parametreler:**
+
+Yok
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.getLanguages();
+
+if (result.success) {
+  console.log('Desteklenen diller:', result.data);
+} else {
+  console.error('Dil getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "languages": [
+      {
+        "code": "tr",
+        "name": "Türkçe",
+        "nativeName": "Türkçe"
+      },
+      {
+        "code": "en",
+        "name": "English",
+        "nativeName": "English"
+      }
+    ]
+  },
+  "message": "Diller başarıyla getirildi"
+}
+```
+
+---
+
+### 9. searchAdvanced(options: any)
+
+Gelişmiş içerik arama yapar
+
+**Parametreler:**
+- `options: any` - Arama seçenekleri
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.searchAdvanced({
+  query: "react native",
+  category: "tutorial",
+  type: "article",
+  language: "tr",
+  dateFrom: "2024-01-01",
+  dateTo: "2024-12-31",
+  tags: ["mobile", "development"],
+  limit: 20,
+  offset: 0
+});
+
+if (result.success) {
+  console.log('Arama sonuçları:', result.data);
+} else {
+  console.error('Arama hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "id": "content_123",
+        "title": "React Native Başlangıç Rehberi",
+        "slug": "react-native-baslangic-rehberi",
+        "excerpt": "React Native ile mobil uygulama geliştirme...",
+        "category": "tutorial",
+        "type": "article",
+        "relevanceScore": 0.95
       }
     ],
-    "total": 1
-  }
+    "total": 1,
+    "query": "react native",
+    "filters": {
+      "category": "tutorial",
+      "type": "article"
+    }
+  },
+  "message": "Arama başarıyla tamamlandı"
 }
-*/
 ```
 
-### 12. getMetadata(contentId: string, path: string): Promise<ApiResponse>
-İçerik metadata bilgilerini getirir.
+---
+
+### 10. getStats()
+
+İçerik istatistiklerini getirir
 
 **Parametreler:**
-- `contentId` (string): İçerik ID'si
-- `path` (string): Metadata path'i
 
-**Detaylı Örnek:**
+Yok
+
+**Örnek Kullanım:**
+
 ```typescript
-const metadata = await zapi.content.getMetadata('content_64f8a1b2c3d4e5f6g7h8i9j0', 'seo');
+const result = await content.getStats();
 
-// Başarılı çıktı:
-/*
+if (result.success) {
+  console.log('İçerik istatistikleri:', result.data);
+} else {
+  console.error('İstatistik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
 {
   "success": true,
-  "message": "Metadata getirildi",
   "data": {
-    "metadata": {
-      "contentId": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "seo",
-      "value": {
-        "metaDescription": "AI ve gelecek hakkında kapsamlı makale",
-        "keywords": ["ai", "yapay zeka", "gelecek", "teknoloji"],
-        "ogTitle": "AI ve Gelecek",
-        "ogDescription": "Yapay zeka teknolojisi hızla gelişiyor..."
-      },
-      "createdAt": "2024-01-01T10:30:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z"
+    "total": 150,
+    "published": 120,
+    "draft": 25,
+    "archived": 5,
+    "byCategory": {
+      "tutorial": 50,
+      "news": 30,
+      "guide": 40,
+      "other": 30
+    },
+    "byType": {
+      "article": 100,
+      "news": 30,
+      "video": 20
     }
-  }
+  },
+  "message": "İstatistikler başarıyla getirildi"
 }
-*/
 ```
 
-### 13. updateMetadata(contentId: string, path: string, value: any): Promise<ApiResponse>
-İçerik metadata bilgilerini günceller.
+---
+
+### 11. getMetadata(contentId: string, path: string)
+
+İçerik metadata bilgilerini getirir
 
 **Parametreler:**
-- `contentId` (string): İçerik ID'si
-- `path` (string): Metadata path'i
-- `value` (any): Güncellenecek değer
+- `contentId: string` - İçerik ID'si
+- `path: string` - Metadata yolu (varsayılan: '')
 
-**Detaylı Örnek:**
+**Örnek Kullanım:**
+
 ```typescript
-const updateMetadata = await zapi.content.updateMetadata('content_64f8a1b2c3d4e5f6g7h8i9j0', 'seo', {
-  metaDescription: 'AI ve gelecek hakkında güncellenmiş makale',
-  keywords: ['ai', 'yapay zeka', 'gelecek', 'teknoloji', 'güncellenmiş'],
-  ogTitle: 'AI ve Gelecek - Güncellenmiş',
-  ogDescription: 'Yapay zeka teknolojisi hızla gelişiyor ve gelecekte...'
+// Tüm metadata'yı getir
+const result = await content.getMetadata("content_123");
+
+// Belirli bir path'i getir
+const result = await content.getMetadata("content_123", "seo.title");
+
+if (result.success) {
+  console.log('Metadata:', result.data);
+} else {
+  console.error('Metadata getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "seo": {
+      "title": "React Native Başlangıç Rehberi",
+      "description": "React Native ile mobil uygulama geliştirme rehberi",
+      "keywords": ["react-native", "mobile", "tutorial"]
+    },
+    "author": {
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  },
+  "message": "Metadata başarıyla getirildi"
+}
+```
+
+---
+
+### 12. updateMetadata(contentId: string, path: string, value: any)
+
+İçerik metadata bilgilerini günceller
+
+**Parametreler:**
+- `contentId: string` - İçerik ID'si
+- `path: string` - Metadata yolu
+- `value: any` - Güncellenecek değer
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.updateMetadata("content_123", "seo.title", "Yeni Başlık");
+
+if (result.success) {
+  console.log('Metadata güncellendi:', result.data);
+} else {
+  console.error('Metadata güncelleme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "seo": {
+      "title": "Yeni Başlık",
+      "description": "React Native ile mobil uygulama geliştirme rehberi",
+      "keywords": ["react-native", "mobile", "tutorial"]
+    }
+  },
+  "message": "Metadata başarıyla güncellendi"
+}
+```
+
+---
+
+### 13. deleteMetadata(contentId: string, path: string)
+
+İçerik metadata bilgilerini siler
+
+**Parametreler:**
+- `contentId: string` - İçerik ID'si
+- `path: string` - Metadata yolu
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.deleteMetadata("content_123", "seo.keywords");
+
+if (result.success) {
+  console.log('Metadata silindi');
+} else {
+  console.error('Metadata silme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Metadata başarıyla silindi"
+}
+```
+
+---
+
+### 14. getPublic(slug: string)
+
+Genel erişime açık içeriği getirir
+
+**Parametreler:**
+- `slug: string` - İçerik slug'ı
+
+**Örnek Kullanım:**
+
+```typescript
+const result = await content.getPublic("react-native-baslangic-rehberi");
+
+if (result.success) {
+  console.log('Genel içerik:', result.data);
+} else {
+  console.error('Genel içerik getirme hatası:', result.error);
+}
+```
+
+**Başarılı Yanıt:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "content_123",
+    "title": "React Native Başlangıç Rehberi",
+    "slug": "react-native-baslangic-rehberi",
+    "content": "React Native ile mobil uygulama geliştirme...",
+    "category": "tutorial",
+    "type": "article",
+    "tags": ["react-native", "mobile", "tutorial"],
+    "author": "John Doe",
+    "publishedAt": "2024-01-15T10:30:00Z"
+  },
+  "message": "İçerik başarıyla getirildi"
+}
+```
+
+**Hata Yanıtı:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONTENT_NOT_PUBLIC",
+    "message": "İçerik genel erişime açık değil"
+  }
+}
+```
+
+---
+
+## İçerik Durumları
+
+| Durum | Açıklama |
+|-------|----------|
+| `draft` | Taslak - Henüz yayınlanmamış |
+| `published` | Yayınlanmış - Genel erişime açık |
+| `archived` | Arşivlenmiş - Eski içerik |
+| `private` | Özel - Sadece yetkili kullanıcılar |
+
+## İçerik Tipleri
+
+| Tip | Açıklama |
+|-----|----------|
+| `article` | Uzun form makale |
+| `news` | Kısa haber |
+| `video` | Video içerik |
+| `tutorial` | Adım adım öğretici |
+| `guide` | Rehber |
+
+## Hata Kodları
+
+| Kod | Açıklama |
+|-----|----------|
+| `UNAUTHORIZED` | Yetkilendirme gerekli |
+| `CONTENT_NOT_FOUND` | İçerik bulunamadı |
+| `CONTENT_NOT_PUBLIC` | İçerik genel erişime açık değil |
+| `VALIDATION_ERROR` | Geçersiz parametreler |
+| `SLUG_ALREADY_EXISTS` | Slug zaten kullanılıyor |
+| `CATEGORY_NOT_FOUND` | Kategori bulunamadı |
+| `TYPE_NOT_FOUND` | İçerik tipi bulunamadı |
+| `METADATA_NOT_FOUND` | Metadata bulunamadı |
+| `RATE_LIMIT_EXCEEDED` | Çok fazla istek gönderildi |
+
+## SEO ve Metadata
+
+İçerikler için SEO optimizasyonu:
+
+```typescript
+// SEO metadata ekle
+await content.updateMetadata("content_123", "seo", {
+  title: "React Native Başlangıç Rehberi",
+  description: "React Native ile mobil uygulama geliştirme rehberi",
+  keywords: ["react-native", "mobile", "tutorial"],
+  ogImage: "https://example.com/og-image.jpg"
 });
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata başarıyla güncellendi",
-  "data": {
-    "metadata": {
-      "contentId": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "seo",
-      "value": {
-        "metaDescription": "AI ve gelecek hakkında güncellenmiş makale",
-        "keywords": ["ai", "yapay zeka", "gelecek", "teknoloji", "güncellenmiş"],
-        "ogTitle": "AI ve Gelecek - Güncellenmiş",
-        "ogDescription": "Yapay zeka teknolojisi hızla gelişiyor ve gelecekte..."
-      },
-      "updatedAt": "2024-01-15T10:40:00Z"
-    }
-  }
-}
-*/
-```
-
-### 14. deleteMetadata(contentId: string, path: string): Promise<ApiResponse>
-İçerik metadata bilgilerini siler.
-
-**Parametreler:**
-- `contentId` (string): İçerik ID'si
-- `path` (string): Metadata path'i
-
-**Detaylı Örnek:**
-```typescript
-const deleteMetadata = await zapi.content.deleteMetadata('content_64f8a1b2c3d4e5f6g7h8i9j0', 'seo');
-
-// Başarılı çıktı:
-/*
-{
-  "success": true,
-  "message": "Metadata başarıyla silindi",
-  "data": {
-    "deleted": {
-      "contentId": "content_64f8a1b2c3d4e5f6g7h8i9j0",
-      "path": "seo",
-      "deletedAt": "2024-01-15T10:40:00Z",
-      "deletedBy": "user_64f8a1b2c3d4e5f6g7h8i9j0"
-    }
-  }
-}
-*/
-```
-
-## Tam Örnek Kullanım
-
-```typescript
-import { ZAPI } from 'zapi-react-native-sdk';
-
-const zapi = new ZAPI('your-api-key', 'your-app-id', 'https://api.zapi.com');
-
-try {
-  // 1. İçerikleri listele
-  const content = await zapi.content.list({
-    limit: 10,
-    page: 1,
-    type: 'text',
-    status: 'published'
-  });
-  console.log('Toplam içerik:', content.data.pagination.totalItems);
-  
-  // 2. Yeni içerik oluştur
-  const create = await zapi.content.create({
-    title: 'Yeni Makale',
-    type: 'text',
-    content: 'Bu yeni bir makale içeriğidir...',
-    tags: ['yeni', 'makale', 'test'],
-    category: 'technology'
-  });
-  const contentId = create.data.content.id;
-  console.log('Yeni içerik oluşturuldu:', contentId);
-  
-  // 3. İçerik detayını getir
-  const contentDetail = await zapi.content.get(contentId);
-  console.log('İçerik başlığı:', contentDetail.data.content.title);
-  console.log('İçerik durumu:', contentDetail.data.content.status);
-  
-  // 4. İçerik güncelle
-  const update = await zapi.content.update(contentId, {
-    title: 'Yeni Makale - Güncellenmiş',
-    content: 'Bu güncellenmiş bir makale içeriğidir...',
-    tags: ['yeni', 'makale', 'test', 'güncellenmiş']
-  });
-  console.log('İçerik güncellendi:', update.data.content.updatedAt);
-  
-  // 5. İçerik yayınla
-  const publish = await zapi.content.publish(contentId);
-  console.log('İçerik yayınlandı:', publish.data.content.publishedAt);
-  
-  // 6. İçerik beğen
-  const like = await zapi.content.like(contentId);
-  console.log('İçerik beğenildi:', like.data.like.likedAt);
-  
-  // 7. Yorum yap
-  const comment = await zapi.content.comment(contentId, {
-    content: 'Çok güzel bir makale!'
-  });
-  console.log('Yorum eklendi:', comment.data.comment.id);
-  
-  // 8. Yorumları getir
-  const comments = await zapi.content.getComments(contentId);
-  console.log('Toplam yorum:', comments.data.total);
-  
-  // 9. Metadata getir
-  const metadata = await zapi.content.getMetadata(contentId, 'seo');
-  console.log('SEO açıklaması:', metadata.data.metadata.value.metaDescription);
-  
-  // 10. Metadata güncelle
-  const updateMetadata = await zapi.content.updateMetadata(contentId, 'seo', {
-    metaDescription: 'Yeni makale hakkında SEO açıklaması',
-    keywords: ['yeni', 'makale', 'seo', 'test']
-  });
-  console.log('Metadata güncellendi:', updateMetadata.data.metadata.updatedAt);
-  
-  // 11. İçerik beğenisini kaldır
-  const unlike = await zapi.content.unlike(contentId);
-  console.log('Beğeni kaldırıldı:', unlike.data.unlike.unlikedAt);
-  
-  // 12. İçerik yayından kaldır
-  const unpublish = await zapi.content.unpublish(contentId);
-  console.log('İçerik yayından kaldırıldı:', unpublish.data.content.unpublishedAt);
-  
-  // 13. Metadata sil
-  const deleteMetadata = await zapi.content.deleteMetadata(contentId, 'seo');
-  console.log('Metadata silindi:', deleteMetadata.data.deleted.deletedAt);
-  
-  // 14. İçerik sil
-  const deleteContent = await zapi.content.delete(contentId);
-  console.log('İçerik silindi:', deleteContent.data.deleted.deletedAt);
-  
-} catch (error) {
-  console.error('Hata:', error.message);
-  console.error('Hata kodu:', error.errorCode);
-  console.error('HTTP durum:', error.statusCode);
-}
 ```

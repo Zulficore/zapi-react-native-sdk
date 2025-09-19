@@ -34,11 +34,11 @@ import {
 export class HttpClient {
   private config: HttpClientConfig;
   private defaultHeaders: Record<string, string>;
-  private deviceInfo?: DeviceInfo;
+  private deviceInfo: DeviceInfo | undefined;
 
   constructor(config: HttpClientConfig, deviceInfo?: DeviceInfo) {
     this.config = config;
-    this.deviceInfo = deviceInfo;
+    this.deviceInfo = deviceInfo || undefined;
     this.defaultHeaders = this.buildDefaultHeaders();
   }
 
@@ -233,7 +233,7 @@ export class HttpClient {
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
     const url = this.buildUrl(endpoint);
-    const body = data ? JSON.stringify(data) : undefined;
+    const body = data ? JSON.stringify(data) : null;
 
     return this.sendRequest<T>(
       url,
@@ -254,7 +254,7 @@ export class HttpClient {
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
     const url = this.buildUrl(endpoint);
-    const body = data ? JSON.stringify(data) : undefined;
+    const body = data ? JSON.stringify(data) : null;
 
     return this.sendRequest<T>(
       url,
@@ -275,7 +275,7 @@ export class HttpClient {
     options?: RequestOptions
   ): Promise<ApiResponse<T>> {
     const url = this.buildUrl(endpoint);
-    const body = data ? JSON.stringify(data) : undefined;
+    const body = data ? JSON.stringify(data) : null;
 
     return this.sendRequest<T>(
       url,

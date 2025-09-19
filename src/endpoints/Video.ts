@@ -1,4 +1,5 @@
 import { BaseEndpoint } from './BaseEndpoint';
+import { ZAPI } from '../ZAPI';
 import { ApiResponse } from '../types';
 
 /**
@@ -7,6 +8,9 @@ import { ApiResponse } from '../types';
  * Bu sınıf video analizi ve transkripsiyon işlemlerini yönetir.
  */
 export class Video extends BaseEndpoint {
+  constructor(zapi: ZAPI) {
+    super(zapi);
+  }
   /**
    * Video analizi yapar
    */

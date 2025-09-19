@@ -31,7 +31,7 @@ export class AuthenticationException extends ZAPIException {
     this.name = 'AuthenticationException';
   }
 
-  get errorType(): string {
+  override get errorType(): string {
     return 'AuthenticationException';
   }
 }
