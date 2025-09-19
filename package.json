@@ -1,6 +1,6 @@
 {
   "name": "zapi-react-native-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ZAPI React Native SDK - Complete API wrapper for ZAPI services with authentication, AI chat, realtime features",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
